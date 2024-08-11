@@ -10,6 +10,13 @@ class Addmember extends StatefulWidget {
 class _AddmemberState extends State<Addmember> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return  MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: ListView(
+          children: [],
+        )
+      ),
+    );
   }
 }
