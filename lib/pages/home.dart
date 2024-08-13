@@ -1,4 +1,5 @@
 import 'package:appgym/pages/layouts/layouts_Home/for_financial_data.dart';
+import 'package:appgym/pages/layouts/layouts_Home/member_information.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
@@ -24,7 +25,20 @@ class _HomeState extends State<Home> {
                 alignment: WrapAlignment.center,
                 spacing: 15.0,
                 runSpacing: 15.0,
-                children: [monthly_turnover(), monthly_expenses(), profit()],
+                children: [
+                  Wrap(
+                    spacing: 15.0,
+                    runSpacing: 15.0,
+                    children: [
+                      monthly_turnover(),
+                      monthly_expenses(),
+                      profit(),
+                    ],
+                  ),
+                  Wrap(
+                    children: [active_member()],
+                  )
+                ],
               ),
             ),
           ],
