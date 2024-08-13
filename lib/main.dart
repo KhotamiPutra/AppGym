@@ -1,5 +1,5 @@
-import 'package:appgym/layout/addmember.dart';
-import 'package:appgym/layout/home.dart';
+import 'package:appgym/pages/addmember.dart';
+import 'package:appgym/pages/home.dart';
 import 'package:flutter/material.dart';
 
 void main() {
