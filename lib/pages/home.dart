@@ -32,7 +32,7 @@ class _HomeState extends State<Home> {
                   Wrap(
                     spacing: 15.0,
                     runSpacing: 15.0,
-                    children: [active_member(), total_member()],
+                    children: [Active_member(), Total_member(),Newmemberthismonth()],
                   ),
                 ],
               ),

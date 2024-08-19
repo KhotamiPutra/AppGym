@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class active_member extends StatelessWidget {
-  const active_member({super.key});
+class Active_member extends StatelessWidget {
+  const Active_member({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200,
-      height: 200,
+      width: 150,
+      height: 150,
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -22,7 +22,7 @@ class active_member extends StatelessWidget {
               ),
               Text(
                 "Member Aktif",
-                style: TextStyle(fontSize: 20),
+                style: TextStyle(fontSize: 15),
               ),
               Text(
                 "Agustus:100",
@@ -38,7 +38,7 @@ class active_member extends StatelessWidget {
             style: TextButton.styleFrom(
                 foregroundColor: Colors.white,
                 backgroundColor: Colors.blue,
-                padding: EdgeInsets.symmetric(horizontal: 70, vertical: 15),
+                padding: EdgeInsets.symmetric(horizontal: 45, vertical: 15),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(5))),
             child: Text("Detail"),
@@ -49,14 +49,14 @@ class active_member extends StatelessWidget {
   }
 }
 
-class total_member extends StatelessWidget {
-  const total_member({super.key});
+class Total_member extends StatelessWidget {
+  const Total_member({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200,
-      height: 200,
+      width: 150,
+      height: 150,
       color: Colors.white,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -71,7 +71,7 @@ class total_member extends StatelessWidget {
               ),
               Text(
                 "Total Member",
-                style: TextStyle(fontSize: 20),
+                style: TextStyle(fontSize: 15),
               ),
               Text(
                 "1000",
@@ -82,15 +82,74 @@ class total_member extends StatelessWidget {
           SizedBox(
             height: 20,
           ),
-          TextButton(
-            onPressed: () {},
-            style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Colors.blue,
-                padding: EdgeInsets.symmetric(horizontal: 70, vertical: 15),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5))),
-            child: Text("Detail"),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 15),
+                child: CustomPaint(
+                  size: Size(50, 50),
+                  painter: CircleChartPainter(),
+                ),
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class CircleChartPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    double radius = size.width / 2;
+
+    Paint paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 10.0
+      ..color = Colors.blue;
+
+    canvas.drawCircle(Offset(radius, radius), radius, paint);
+
+    // Menambahkan bagian grafik (misalnya, 25%)
+    Paint progressPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 10.0
+      ..color = Colors.green
+      ..strokeCap = StrokeCap.round;
+
+    double sweepAngle = 0.25 * 3.14159 * 2; // 25% dari 360 derajat
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(radius, radius), radius: radius),
+      -3.14159 / 2, // Mulai dari atas
+      sweepAngle,
+      false,
+      progressPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+class Newmemberthismonth extends StatelessWidget {
+  const Newmemberthismonth({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 315,
+      height: 150,
+      color: Colors.white,
+      child: Row(
+        children: [
+          Column(
+            children: [
+              Icon(Icons.group_add, color: Colors.blue),
+            ],
           )
         ],
       ),
