@@ -79,14 +79,11 @@ class Total_member extends StatelessWidget {
               )
             ],
           ),
-          SizedBox(
-            height: 20,
-          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Padding(
-                padding: const EdgeInsets.only(right: 15),
+                padding: const EdgeInsets.only(right: 20),
                 child: CustomPaint(
                   size: Size(50, 50),
                   painter: CircleChartPainter(),
@@ -135,20 +132,62 @@ class CircleChartPainter extends CustomPainter {
   }
 }
 
-class Newmemberthismonth extends StatelessWidget {
-  const Newmemberthismonth({super.key});
+class Newmember extends StatelessWidget {
+  const Newmember({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      color: Colors.white,
       width: 315,
       height: 150,
-      color: Colors.white,
-      child: Row(
+      child: Column(
         children: [
-          Column(
+          SizedBox(
+            height: 10,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.group_add, color: Colors.blue),
+              Icon(Icons.group_add,
+                  color: const Color.fromARGB(255, 129, 129, 129)),
+              SizedBox(
+                width: 10,
+              ),
+              Text("Member Baru")
+            ],
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          Table(
+            border: TableBorder.all(),
+            columnWidths: {
+              0: FlexColumnWidth(),
+              1: FixedColumnWidth(120),
+              2: FixedColumnWidth(80),
+            },
+            children: [
+              TableRow(children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text("Nama"),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text('Periode'),
+                ),
+              ]),
+              TableRow(children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text('Putra'),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text('1 Januari - 1 Februari'),
+                ),
+              ])
             ],
           )
         ],
