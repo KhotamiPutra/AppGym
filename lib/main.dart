@@ -1,6 +1,7 @@
 import 'package:appgym/pages/addmember.dart';
 import 'package:appgym/pages/home.dart';
 import 'package:flutter/material.dart';
+import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 
 void main() {
   runApp(const AppWrapper());
@@ -29,40 +30,33 @@ class _AppWrapperState extends State<AppWrapper> {
     final myAppBar = AppBar(
       title: const Text('App Gym', style: TextStyle(color: Colors.white)),
       iconTheme: const IconThemeData(color: Colors.white),
-      backgroundColor: Colors.blue,
+      backgroundColor: const Color.fromARGB(255, 253, 62, 67),
     );
     final _page = [Home(appBar: myAppBar, paddingTop: paddingTop), Addmember()];
+
     return MaterialApp(
+      theme: ThemeData(fontFamily: 'QuickSand'),
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: myAppBar,
         body: _nav == 0
             ? Home(appBar: myAppBar, paddingTop: paddingTop)
-            : _page[_nav], // AddMember tidak memerlukan AppBar dan paddingTop
-        bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: Colors.white,
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined, color: Colors.blueAccent),
-              label: 'Beranda',
-              activeIcon: Icon(
-                Icons.home,
-                color: Colors.blue,
-              ),
+            : _page[_nav],
+        bottomNavigationBar: SalomonBottomBar(
+          currentIndex: _nav,
+          onTap: _onItemTapped,
+          items: [
+            SalomonBottomBarItem(
+              icon: const Icon(Icons.home_outlined),
+              title: const Text('Beranda'),
+              selectedColor: const Color.fromARGB(255, 253, 62, 67),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.group_add_outlined, color: Colors.blueAccent),
-              label: 'Add Member',
-              activeIcon: Icon(
-                Icons.group_add,
-                color: Colors.blue,
-              ),
+            SalomonBottomBarItem(
+              icon: const Icon(Icons.group_add_outlined),
+              title: const Text('Add Member'),
+              selectedColor: const Color.fromARGB(255, 253, 62, 67),
             ),
           ],
-          currentIndex: _nav,
-          selectedItemColor: Colors.blue,
-          unselectedItemColor: Colors.blueAccent,
-          onTap: _onItemTapped,
         ),
         drawer: Drawer(
           child: ListView(
