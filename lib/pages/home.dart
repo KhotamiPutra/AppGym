@@ -21,11 +21,11 @@ class _HomeState extends State<Home> {
         heightApp - widget.appBar.preferredSize.height - widget.paddingTop;
 
     // pie chart
-    final double totalMembers = 100; // Total anggota
-    final double activeMembers = 75; // Anggota aktif
+    const double totalMembers = 100; // Total anggota
+    const double activeMembers = 75; // Anggota aktif
 
     // Menghitung Persentase
-    final double inactiveMembers = totalMembers - activeMembers;
+    const double inactiveMembers = totalMembers - activeMembers;
 
     final Map<String, double> dataMap = {
       "Active": activeMembers,
@@ -36,7 +36,7 @@ class _HomeState extends State<Home> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'QuickSand'),
       home: Scaffold(
-        body: Container(
+        body: SizedBox(
           height: heightBody, // Mengatur tinggi body
           child: ListView(
             children: [
@@ -92,14 +92,14 @@ class _HomeState extends State<Home> {
                                         child: PieChart(
                                           dataMap: dataMap,
                                           chartType: ChartType.ring,
-                                          colorList: [Colors.green, Colors.red],
-                                          legendOptions: LegendOptions(
+                                          colorList: const [Colors.green, Colors.red],
+                                          legendOptions: const LegendOptions(
                                             legendPosition:
                                                 LegendPosition.bottom,
                                             showLegends: false,
                                           ),
                                           chartValuesOptions:
-                                              ChartValuesOptions(
+                                              const ChartValuesOptions(
                                             showChartValuesInPercentage: true,
                                           ),
                                         ),

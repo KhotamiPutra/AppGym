@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:appgym/pages/addmember.dart';
 import 'package:appgym/pages/home.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +10,7 @@ void main() {
 }
 
 class AppWrapper extends StatefulWidget {
-  const AppWrapper({Key? key}) : super(key: key);
+  const AppWrapper({super.key});
 
   @override
   _AppWrapperState createState() => _AppWrapperState();
@@ -32,7 +34,7 @@ class _AppWrapperState extends State<AppWrapper> {
       iconTheme: const IconThemeData(color: Colors.white),
       backgroundColor: const Color.fromARGB(255, 253, 62, 67),
     );
-    final _page = [Home(appBar: myAppBar, paddingTop: paddingTop), Addmember()];
+    final page = [Home(appBar: myAppBar, paddingTop: paddingTop), const Addmember()];
 
     return MaterialApp(
       theme: ThemeData(fontFamily: 'QuickSand'),
@@ -41,7 +43,7 @@ class _AppWrapperState extends State<AppWrapper> {
         appBar: myAppBar,
         body: _nav == 0
             ? Home(appBar: myAppBar, paddingTop: paddingTop)
-            : _page[_nav],
+            : page[_nav],
         bottomNavigationBar: SalomonBottomBar(
           currentIndex: _nav,
           onTap: _onItemTapped,
@@ -62,7 +64,7 @@ class _AppWrapperState extends State<AppWrapper> {
           child: ListView(
             padding: EdgeInsets.zero,
             children: <Widget>[
-              SizedBox(
+            const  SizedBox(
                 height: 30,
               ),
               ListTile(
