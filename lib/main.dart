@@ -16,8 +16,6 @@ class AppWrapper extends StatefulWidget {
 class _AppWrapperState extends State<AppWrapper> {
   int _nav = 0;
 
-  final List<Widget> _page = [Home(), Addmember()];
-
   void _onItemTapped(int index) {
     setState(() {
       _nav = index;
@@ -27,15 +25,20 @@ class _AppWrapperState extends State<AppWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    final paddingTop = MediaQuery.of(context).padding.top;
+    final myAppBar = AppBar(
+      title: const Text('App Gym', style: TextStyle(color: Colors.white)),
+      iconTheme: const IconThemeData(color: Colors.white),
+      backgroundColor: Colors.blue,
+    );
+    final _page = [Home(appBar: myAppBar, paddingTop: paddingTop), Addmember()];
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('App Gym', style: TextStyle(color: Colors.white)),
-          iconTheme: const IconThemeData(color: Colors.white),
-          backgroundColor: Colors.blue,
-        ),
-        body: _page[_nav],
+        appBar: myAppBar,
+        body: _nav == 0
+            ? Home(appBar: myAppBar, paddingTop: paddingTop)
+            : _page[_nav], // AddMember tidak memerlukan AppBar dan paddingTop
         bottomNavigationBar: BottomNavigationBar(
           backgroundColor: Colors.white,
           items: const <BottomNavigationBarItem>[
@@ -65,34 +68,13 @@ class _AppWrapperState extends State<AppWrapper> {
           child: ListView(
             padding: EdgeInsets.zero,
             children: <Widget>[
-              // const DrawerHeader(
-              //   decoration: BoxDecoration(
-              //     color: Colors.blue,
-              //   ),
-              //   child: Text(
-              //     'Menu',
-              //     style: TextStyle(
-              //       color: Colors.white,
-              //       fontSize: 24,
-              //     ),
-              //   ),
-              // ),
               SizedBox(
                 height: 30,
               ),
               ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('Beranda'),
-                onTap: () {
-                  _onItemTapped(0);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.group_add),
-                title: const Text('Add Member'),
-                onTap: () {
-                  _onItemTapped(1);
-                },
+                leading: const Icon(Icons.backup_sharp),
+                title: const Text('Backup Data'),
+                onTap: () {},
               ),
             ],
           ),
