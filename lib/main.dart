@@ -1,7 +1,9 @@
 import 'package:appgym/pages/addmember.dart';
+import 'package:appgym/pages/datatrainer.dart';
 import 'package:appgym/pages/home.dart';
+import 'package:appgym/pages/procuct.dart';
 import 'package:flutter/material.dart';
-import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
+import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 
 void main() {
   runApp(const AppWrapper());
@@ -21,7 +23,6 @@ class _AppWrapperState extends State<AppWrapper> {
     setState(() {
       _nav = index;
     });
-    Navigator.of(context).pop();
   }
 
   @override
@@ -32,7 +33,20 @@ class _AppWrapperState extends State<AppWrapper> {
       iconTheme: const IconThemeData(color: Colors.white),
       backgroundColor: const Color.fromARGB(255, 253, 62, 67),
     );
-    final page = [Home(appBar: myAppBar, paddingTop: paddingTop), Addmember()];
+    final page = [
+      Home(appBar: myAppBar, paddingTop: paddingTop),
+      Addmember(),
+      Datatrainer(),
+      Product()
+    ];
+
+    // Ikon dan judul untuk navigasi bawah
+    final iconList = <IconData>[
+      Icons.home_outlined,
+      Icons.group_add_outlined,
+      Icons.fitness_center_outlined,
+      Icons.trolley,
+    ];
 
     return MaterialApp(
       theme: ThemeData(fontFamily: 'QuickSand'),
@@ -42,27 +56,29 @@ class _AppWrapperState extends State<AppWrapper> {
         body: _nav == 0
             ? Home(appBar: myAppBar, paddingTop: paddingTop)
             : page[_nav],
-        bottomNavigationBar: SalomonBottomBar(
-          currentIndex: _nav,
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            // Tambahkan aksi untuk tombol scan QR di sini
+          },
+          backgroundColor: const Color.fromARGB(255, 253, 62, 67),
+          child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: AnimatedBottomNavigationBar(
+          icons: iconList,
+          activeIndex: _nav,
+          gapLocation: GapLocation.none,
+          notchSmoothness: NotchSmoothness.smoothEdge,
           onTap: _onItemTapped,
-          items: [
-            SalomonBottomBarItem(
-              icon: const Icon(Icons.home_outlined),
-              title: const Text('Beranda'),
-              selectedColor: const Color.fromARGB(255, 253, 62, 67),
-            ),
-            SalomonBottomBarItem(
-              icon: const Icon(Icons.group_add_outlined),
-              title: const Text('Add Member'),
-              selectedColor: const Color.fromARGB(255, 253, 62, 67),
-            ),
-          ],
+          activeColor: const Color.fromARGB(255, 253, 62, 67),
+          inactiveColor: Colors.grey,
+          backgroundColor: Colors.white,
         ),
         drawer: Drawer(
           child: ListView(
             padding: EdgeInsets.zero,
             children: <Widget>[
-              SizedBox(
+              const SizedBox(
                 height: 30,
               ),
               ListTile(

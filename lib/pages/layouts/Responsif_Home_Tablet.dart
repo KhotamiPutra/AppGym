@@ -18,8 +18,8 @@ class TotalMemberTablet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: MediaQuery.of(context).size.width * 0.45, // Adjust width
-      height: MediaQuery.of(context).size.height * 0.45, // Adjust height
+      width: MediaQuery.of(context).size.width * 0.45, 
+      height: MediaQuery.of(context).size.height * 0.45, 
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 19, 47, 71),
         borderRadius: BorderRadius.circular(15),
