@@ -1,9 +1,8 @@
 import 'package:appgym/pages/addmember.dart';
 import 'package:appgym/pages/datatrainer.dart';
 import 'package:appgym/pages/home.dart';
-import 'package:appgym/pages/procuct.dart';
 import 'package:flutter/material.dart';
-import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
+import 'package:persistent_bottom_nav_bar_2/persistent_tab_view.dart';
 
 void main() {
   runApp(const AppWrapper());
@@ -19,60 +18,81 @@ class AppWrapper extends StatefulWidget {
 class _AppWrapperState extends State<AppWrapper> {
   int _nav = 0;
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _nav = index;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  List<Widget> _buildScreens() {
     final paddingTop = MediaQuery.of(context).padding.top;
     final myAppBar = AppBar(
       title: const Text('App Gym', style: TextStyle(color: Colors.white)),
       iconTheme: const IconThemeData(color: Colors.white),
       backgroundColor: const Color.fromARGB(255, 253, 62, 67),
     );
-    final page = [
+    return [
       Home(appBar: myAppBar, paddingTop: paddingTop),
       Addmember(),
-      Datatrainer(),
-      Product()
+      Datatrainer(
+        appBar: myAppBar,
+         paddingTop: paddingTop),
     ];
+  }
 
-    // Ikon dan judul untuk navigasi bawah
-    final iconList = <IconData>[
-      Icons.home_outlined,
-      Icons.group_add_outlined,
-      Icons.fitness_center_outlined,
-      Icons.trolley,
+  List<PersistentBottomNavBarItem> _navBarsItems() {
+    return [
+      PersistentBottomNavBarItem(
+        icon: Icon(Icons.home_outlined),
+        title: "Home",
+        activeColorPrimary: const Color.fromARGB(255, 253, 62, 67),
+        inactiveColorPrimary: Colors.grey,
+      ),
+      PersistentBottomNavBarItem(
+        icon: Icon(Icons.group_add_outlined),
+        title: "Add Member",
+        activeColorPrimary: const Color.fromARGB(255, 253, 62, 67),
+        inactiveColorPrimary: Colors.grey,
+      ),
+      PersistentBottomNavBarItem(
+        icon: Icon(Icons.fitness_center_outlined),
+        title: "Data Trainer",
+        activeColorPrimary: const Color.fromARGB(255, 253, 62, 67),
+        inactiveColorPrimary: Colors.grey,
+      ),
     ];
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(fontFamily: 'QuickSand'),
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        appBar: myAppBar,
-        body: _nav == 0
-            ? Home(appBar: myAppBar, paddingTop: paddingTop)
-            : page[_nav],
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            // Tambahkan aksi untuk tombol scan QR di sini
-          },
+        appBar: AppBar(
+          title: const Text('App Gym', style: TextStyle(color: Colors.white)),
+          iconTheme: const IconThemeData(color: Colors.white),
           backgroundColor: const Color.fromARGB(255, 253, 62, 67),
-          child: const Icon(Icons.qr_code_scanner, color: Colors.white),
         ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        bottomNavigationBar: AnimatedBottomNavigationBar(
-          icons: iconList,
-          activeIndex: _nav,
-          gapLocation: GapLocation.none,
-          notchSmoothness: NotchSmoothness.smoothEdge,
-          onTap: _onItemTapped,
-          activeColor: const Color.fromARGB(255, 253, 62, 67),
-          inactiveColor: Colors.grey,
+        body: PersistentTabView(
+          context,
+          controller: PersistentTabController(initialIndex: _nav),
+          screens: _buildScreens(),
+          items: _navBarsItems(),
+          confineInSafeArea: true,
           backgroundColor: Colors.white,
+          handleAndroidBackButtonPress: true,
+          resizeToAvoidBottomInset: true,
+          stateManagement: true,
+          hideNavigationBarWhenKeyboardShows: true,
+          decoration: NavBarDecoration(
+            colorBehindNavBar: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          popAllScreensOnTapOfSelectedTab: true,
+          itemAnimationProperties: ItemAnimationProperties(
+            duration: Duration(milliseconds: 200),
+            curve: Curves.ease,
+          ),
+          screenTransitionAnimation: ScreenTransitionAnimation(
+            animateTabTransition: true,
+            curve: Curves.easeInOut,
+            duration: Duration(milliseconds: 300),
+          ),
         ),
         drawer: Drawer(
           child: ListView(
