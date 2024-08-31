@@ -286,11 +286,9 @@ class AddExpenseModal extends StatelessWidget {
             decoration: InputDecoration(labelText: 'Nominal Pengeluaran'),
             keyboardType: TextInputType.number,
           ),
-          SizedBox(height: 16),
           TextField(
             decoration: InputDecoration(labelText: 'Keterangan'),
           ),
-          SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
               // Add logic to handle saving the expense
@@ -298,6 +296,7 @@ class AddExpenseModal extends StatelessWidget {
             },
             child: Text('Simpan'),
           ),
+          SizedBox(height: 1,)
         ],
       ),
     );
