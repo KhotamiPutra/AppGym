@@ -27,10 +27,11 @@ class _AppWrapperState extends State<AppWrapper> {
     );
     return [
       Home(appBar: myAppBar, paddingTop: paddingTop),
-      Addmember(),
-      Datatrainer(
+      Addmember(
         appBar: myAppBar,
-         paddingTop: paddingTop),
+        paddingTop: paddingTop,
+      ),
+      Datatrainer(appBar: myAppBar, paddingTop: paddingTop),
     ];
   }
 
