@@ -52,6 +52,8 @@ class _DatatrainerState extends State<Addmember> {
     }
   }
 
+  final List<String> items = ['Putra', 'Putri', 'Galih'];
+  String? selectedItem;
   @override
   Widget build(BuildContext context) {
     final widthApp = MediaQuery.of(context).size.width;
@@ -77,17 +79,19 @@ class _DatatrainerState extends State<Addmember> {
                     padding: const EdgeInsets.all(8.0),
                     child: ListView(
                       children: [
-                        SizedBox(height: heightApp * 0.02,),
+                        SizedBox(
+                          height: heightApp * 0.02,
+                        ),
                         TextField(
                           decoration: InputDecoration(
-                           prefixIcon: Icon(Icons.search),
-                           labelText: 'Cari Member',
-                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30)
-                           )
-                          ),
+                              prefixIcon: Icon(Icons.search),
+                              labelText: 'Cari Member',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30))),
                         ),
-                         SizedBox(height: heightApp * 0.02,),
+                        SizedBox(
+                          height: heightApp * 0.02,
+                        ),
                         Text(
                           "Data Member Aktif",
                           style: TextStyle(
@@ -446,6 +450,26 @@ class _DatatrainerState extends State<Addmember> {
                                               ),
                                             ),
                                           ),
+                                        ),
+                                        DropdownButton<String>(
+                                          hint: Text('Pilih Trainer'),
+                                          value: selectedItem,
+                                          items: items.map((String item) {
+                                            return DropdownMenuItem<String>(
+                                              value: item,
+                                              child: Text(item),
+                                            );
+                                          }).toList(),
+                                          onChanged: (String? newValue) {
+                                            setState(() {
+                                              selectedItem = newValue;
+                                            });
+                                          },
+                                        ),
+                                        TextField(
+                                          readOnly: true,
+                                          decoration: InputDecoration(
+                                              hintText: 'Harga'),
                                         ),
                                         const SizedBox(height: 20),
                                         ElevatedButton(
