@@ -30,18 +30,14 @@ class _DatatrainerState extends State<Datatrainer> {
 
   @override
   Widget build(BuildContext context) {
-    final widthApp = MediaQuery.of(context).size.width;
-    final heightApp = MediaQuery.of(context).size.height;
+    // final widthApp = MediaQuery.of(context).size.width;
+    // final heightApp = MediaQuery.of(context).size.height;
 
-    final heightBody =
-        heightApp - widget.appBar.preferredSize.height - widget.paddingTop;
+    // final heightBody =
+    //     heightApp - widget.appBar.preferredSize.height - widget.paddingTop;
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(fontFamily: 'QuickSand'),
-      home: Scaffold(
-        backgroundColor: const Color.fromARGB(255, 241, 241, 241),
-        body: LayoutBuilder(
+    return Scaffold(
+      body:LayoutBuilder(
           builder: (context, constraints) {
             return Stack(
               children: [
@@ -240,7 +236,6 @@ class _DatatrainerState extends State<Datatrainer> {
             );
           },
         ),
-      ),
-    );
+      );
   }
 }

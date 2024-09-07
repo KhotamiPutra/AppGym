@@ -1,6 +1,8 @@
 import 'package:appgym/pages/addmember.dart';
 import 'package:appgym/pages/datatrainer.dart';
 import 'package:appgym/pages/home.dart';
+import 'package:appgym/pages/setting.dart';
+import 'package:appgym/pages/visitor.dart';
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar_2/persistent_tab_view.dart';
 
@@ -18,6 +20,9 @@ class AppWrapper extends StatefulWidget {
 class _AppWrapperState extends State<AppWrapper> {
   final int _nav = 0;
 
+  // Define GlobalKey for Navigator
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
   List<Widget> _buildScreens() {
     final paddingTop = MediaQuery.of(context).padding.top;
     final myAppBar = AppBar(
@@ -32,6 +37,7 @@ class _AppWrapperState extends State<AppWrapper> {
         paddingTop: paddingTop,
       ),
       Datatrainer(appBar: myAppBar, paddingTop: paddingTop),
+      VisitorPage(),
     ];
   }
 
@@ -55,6 +61,12 @@ class _AppWrapperState extends State<AppWrapper> {
         activeColorPrimary: const Color.fromARGB(255, 253, 62, 67),
         inactiveColorPrimary: Colors.grey,
       ),
+      PersistentBottomNavBarItem(
+        icon: const Icon(Icons.people_alt_rounded),
+        title: "Visit",
+        activeColorPrimary: const Color.fromARGB(255, 253, 62, 67),
+        inactiveColorPrimary: Colors.grey,
+      ),
     ];
   }
 
@@ -63,11 +75,23 @@ class _AppWrapperState extends State<AppWrapper> {
     return MaterialApp(
       theme: ThemeData(fontFamily: 'QuickSand'),
       debugShowCheckedModeBanner: false,
+      navigatorKey: _navigatorKey, // Set the navigatorKey here
       home: Scaffold(
         appBar: AppBar(
           title: const Text('App Gym', style: TextStyle(color: Colors.white)),
           iconTheme: const IconThemeData(color: Colors.white),
           backgroundColor: const Color.fromARGB(255, 253, 62, 67),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  // Use navigatorKey to perform navigation
+                  _navigatorKey.currentState?.push(
+                    MaterialPageRoute(
+                        builder: (context) => const SettingPage()),
+                  );
+                },
+                icon: const Icon(Icons.settings))
+          ],
         ),
         body: PersistentTabView(
           context,
@@ -93,21 +117,6 @@ class _AppWrapperState extends State<AppWrapper> {
             animateTabTransition: true,
             curve: Curves.easeInOut,
             duration: Duration(milliseconds: 300),
-          ),
-        ),
-        drawer: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: <Widget>[
-              const SizedBox(
-                height: 30,
-              ),
-              ListTile(
-                leading: const Icon(Icons.backup_sharp),
-                title: const Text('Backup Data'),
-                onTap: () {},
-              ),
-            ],
           ),
         ),
       ),
