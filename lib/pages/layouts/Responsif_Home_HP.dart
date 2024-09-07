@@ -35,17 +35,17 @@ class TotalMemberHP extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         "Total Keseluruhan Anggota",
                         style: TextStyle(color: Colors.white),
                       ),
                       Text(
                         "Aktif : $activeMembers",
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                       ),
                       Text(
                         "Non Aktif : ${totalMembers - activeMembers}",
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ],
                   ),
@@ -55,15 +55,15 @@ class TotalMemberHP extends StatelessWidget {
                   PieChart(
                     dataMap: dataMap,
                     chartType: ChartType.ring,
-                    colorList: [Colors.green, Colors.red],
-                    legendOptions: LegendOptions(
+                    colorList: const [Colors.green, Colors.red],
+                    legendOptions: const LegendOptions(
                       legendPosition: LegendPosition.left,
                       legendTextStyle: TextStyle(
                         color: Colors.white,
                       ),
                       showLegends: true,
                     ),
-                    chartValuesOptions: ChartValuesOptions(
+                    chartValuesOptions: const ChartValuesOptions(
                       showChartValuesInPercentage: true,
                     ),
                   ),
@@ -87,10 +87,10 @@ class TotalOmzetHP extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       margin: EdgeInsets.only(top: heightBody * 0.02),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [Colors.blueAccent, Colors.lightBlue],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -100,7 +100,7 @@ class TotalOmzetHP extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.3),
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
@@ -124,7 +124,7 @@ class TotalOmzetHP extends StatelessWidget {
                   onPressed: () {
                     // Logic for additional action if needed
                   },
-                  icon: Icon(Icons.info_outline, color: Colors.white),
+                  icon: const Icon(Icons.info_outline, color: Colors.white),
                 ),
               ],
             ),
@@ -179,10 +179,10 @@ class TotalPengeluaranHP extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       margin: EdgeInsets.only(top: heightBody * 0.03),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [Colors.purpleAccent, Colors.deepPurple],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -192,7 +192,7 @@ class TotalPengeluaranHP extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.3),
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
@@ -219,13 +219,13 @@ class TotalPengeluaranHP extends StatelessWidget {
                       builder: (context) => AddExpenseModal(),
                     );
                   },
-                  child: Icon(Icons.add, color: Colors.white),
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                        Color.fromARGB(255, 67, 27, 136), // Updated parameter
-                    shape: CircleBorder(),
-                    padding: EdgeInsets.all(12),
+                        const Color.fromARGB(255, 67, 27, 136), // Updated parameter
+                    shape: const CircleBorder(),
+                    padding: const EdgeInsets.all(12),
                   ),
+                  child: Icon(Icons.add, color: Colors.white),
                 ),
               ],
             ),
@@ -273,6 +273,8 @@ class TotalPengeluaranHP extends StatelessWidget {
 
 //modal untuk pengeluaran
 class AddExpenseModal extends StatelessWidget {
+  const AddExpenseModal({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -280,13 +282,13 @@ class AddExpenseModal extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Tambah Pengeluaran',
+          const Text('Tambah Pengeluaran',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          TextField(
+          const TextField(
             decoration: InputDecoration(labelText: 'Nominal Pengeluaran'),
             keyboardType: TextInputType.number,
           ),
-          TextField(
+          const TextField(
             decoration: InputDecoration(labelText: 'Keterangan'),
           ),
           ElevatedButton(
@@ -294,9 +296,9 @@ class AddExpenseModal extends StatelessWidget {
               // Add logic to handle saving the expense
               Navigator.pop(context);
             },
-            child: Text('Simpan'),
+            child: const Text('Simpan'),
           ),
-          SizedBox(height: 1,)
+          const SizedBox(height: 1,)
         ],
       ),
     );
@@ -315,10 +317,10 @@ class TotalLabaHP extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       margin: EdgeInsets.only(top: heightBody * 0.03),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [Colors.teal, Colors.cyan],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -328,7 +330,7 @@ class TotalLabaHP extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.3),
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
@@ -352,7 +354,7 @@ class TotalLabaHP extends StatelessWidget {
                   onPressed: () {
                     // Logic for additional action if needed
                   },
-                  icon: Icon(Icons.info_outline, color: Colors.white),
+                  icon: const Icon(Icons.info_outline, color: Colors.white),
                 ),
               ],
             ),

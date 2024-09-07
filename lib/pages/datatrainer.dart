@@ -70,8 +70,8 @@ class _DatatrainerState extends State<Datatrainer> {
                                   child: Row(
                                     children: [
                                       CircleAvatar(
-                                        child: const Icon(Icons.person),
                                         radius: constraints.maxWidth * 0.05,
+                                        child: const Icon(Icons.person),
                                       ),
                                       const SizedBox(width: 8),
                                       Expanded(
@@ -192,17 +192,17 @@ class _DatatrainerState extends State<Datatrainer> {
                                                 ),
                                         ),
                                         const SizedBox(height: 16.0),
-                                        TextField(
-                                          decoration: const InputDecoration(
+                                        const TextField(
+                                          decoration: InputDecoration(
                                               labelText: 'Nama'),
                                         ),
-                                        TextField(
-                                          decoration: const InputDecoration(
+                                        const TextField(
+                                          decoration: InputDecoration(
                                               labelText: 'No. Telepon'),
                                           keyboardType: TextInputType.phone,
                                         ),
-                                        TextField(
-                                          decoration: const InputDecoration(
+                                        const TextField(
+                                          decoration: InputDecoration(
                                               labelText: 'Harga'),
                                           keyboardType: TextInputType.number,
                                         ),
@@ -221,16 +221,16 @@ class _DatatrainerState extends State<Datatrainer> {
                             },
                           );
                         },
-                        child: const Text(
-                          "+ Trainer",
-                          style: TextStyle(color: Colors.white),
-                        ),
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                           backgroundColor:
                               const Color.fromARGB(255, 253, 62, 67),
+                        ),
+                        child: const Text(
+                          "+ Trainer",
+                          style: TextStyle(color: Colors.white),
                         ),
                       ),
                     ),

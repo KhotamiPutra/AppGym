@@ -9,14 +9,14 @@ void main() {
 }
 
 class AppWrapper extends StatefulWidget {
-  const AppWrapper({Key? key}) : super(key: key);
+  const AppWrapper({super.key});
 
   @override
   _AppWrapperState createState() => _AppWrapperState();
 }
 
 class _AppWrapperState extends State<AppWrapper> {
-  int _nav = 0;
+  final int _nav = 0;
 
   List<Widget> _buildScreens() {
     final paddingTop = MediaQuery.of(context).padding.top;
@@ -38,19 +38,19 @@ class _AppWrapperState extends State<AppWrapper> {
   List<PersistentBottomNavBarItem> _navBarsItems() {
     return [
       PersistentBottomNavBarItem(
-        icon: Icon(Icons.home_outlined),
+        icon: const Icon(Icons.home_outlined),
         title: "Home",
         activeColorPrimary: const Color.fromARGB(255, 253, 62, 67),
         inactiveColorPrimary: Colors.grey,
       ),
       PersistentBottomNavBarItem(
-        icon: Icon(Icons.group_add_outlined),
+        icon: const Icon(Icons.group_add_outlined),
         title: "Add Member",
         activeColorPrimary: const Color.fromARGB(255, 253, 62, 67),
         inactiveColorPrimary: Colors.grey,
       ),
       PersistentBottomNavBarItem(
-        icon: Icon(Icons.fitness_center_outlined),
+        icon: const Icon(Icons.fitness_center_outlined),
         title: "Data Trainer",
         activeColorPrimary: const Color.fromARGB(255, 253, 62, 67),
         inactiveColorPrimary: Colors.grey,
@@ -85,11 +85,11 @@ class _AppWrapperState extends State<AppWrapper> {
             borderRadius: BorderRadius.circular(10),
           ),
           popAllScreensOnTapOfSelectedTab: true,
-          itemAnimationProperties: ItemAnimationProperties(
+          itemAnimationProperties: const ItemAnimationProperties(
             duration: Duration(milliseconds: 200),
             curve: Curves.ease,
           ),
-          screenTransitionAnimation: ScreenTransitionAnimation(
+          screenTransitionAnimation: const ScreenTransitionAnimation(
             animateTabTransition: true,
             curve: Curves.easeInOut,
             duration: Duration(milliseconds: 300),

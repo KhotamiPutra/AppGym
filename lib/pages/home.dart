@@ -24,8 +24,8 @@ class _HomeState extends State<Home> {
         heightApp - widget.appBar.preferredSize.height - widget.paddingTop;
 
     // pie chart
-    final double totalMembers = 100; // Total anggota
-    final double activeMembers = 75; // Anggota aktif
+    const double totalMembers = 100; // Total anggota
+    const double activeMembers = 75; // Anggota aktif
 
     // Menghitung Persentase
     final double inactiveMembers = totalMembers - activeMembers;
@@ -39,8 +39,8 @@ class _HomeState extends State<Home> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'QuickSand'),
       home: Scaffold(
-        backgroundColor: Color.fromARGB(255, 241, 241, 241),
-        body: Container(
+        backgroundColor: const Color.fromARGB(255, 241, 241, 241),
+        body: SizedBox(
           height: heightBody, // Mengatur tinggi body
           child: ListView(
             children: [
@@ -86,15 +86,15 @@ class _HomeState extends State<Home> {
                               activeMembers: activeMembers,
                               dataMap: dataMap),
                         ),
-                        StaggeredGridTile.fit(
+                        const StaggeredGridTile.fit(
                           crossAxisCellCount: 2,
                           child: TotalOmzetTablet(),
                         ),
-                        StaggeredGridTile.fit(
+                        const StaggeredGridTile.fit(
                           crossAxisCellCount: 2,
                           child: TotalPengeluaranTablet(),
                         ),
-                        StaggeredGridTile.fit(
+                        const StaggeredGridTile.fit(
                           crossAxisCellCount: 2,
                           child: TotalLabaTablet(),
                         ),
