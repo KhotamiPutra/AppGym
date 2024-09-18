@@ -5,8 +5,18 @@ import 'package:appgym/pages/setting.dart';
 import 'package:appgym/pages/visitor.dart';
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar_2/persistent_tab_view.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform, kIsWeb;
 
 void main() {
+  if (!kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.linux ||
+          defaultTargetPlatform == TargetPlatform.macOS)) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
   runApp(const AppWrapper());
 }
 
@@ -86,8 +96,7 @@ class _AppWrapperState extends State<AppWrapper> {
                 onPressed: () {
                   // Use navigatorKey to perform navigation
                   _navigatorKey.currentState?.push(
-                    MaterialPageRoute(
-                        builder: (context) => const SettingPage()),
+                    MaterialPageRoute(builder: (context) => SettingPage()),
                   );
                 },
                 icon: const Icon(Icons.settings))

@@ -1,129 +1,217 @@
+import 'package:appgym/Database/database_helper.dart';
 import 'package:flutter/material.dart';
 
 class SettingPage extends StatefulWidget {
-  const SettingPage({super.key});
-
   @override
-  State<SettingPage> createState() => _SettingPageState();
+  _SettingPageState createState() => _SettingPageState();
 }
 
 class _SettingPageState extends State<SettingPage> {
-  // Controllers for price inputs
-  final TextEditingController _memberPriceController =
-      TextEditingController(text: '50000');
-  final TextEditingController _preRegisterPriceController =
-      TextEditingController(text: '40000');
-  final TextEditingController _tniDiscountPriceController =
-      TextEditingController(text: '30000');
-  final TextEditingController _visitorPriceController =
-      TextEditingController(text: '10000');
+  final DBHelper _dbHelper = DBHelper();
+  final TextEditingController _memberPriceController = TextEditingController();
+  final TextEditingController _preRegistrationPriceController =
+      TextEditingController();
+  final TextEditingController _tniDiscountController = TextEditingController();
+  bool _isUpdating = false;
+  int? _priceId;
 
-  // Readonly flags for each input
-  bool _isMemberPriceEditable = false;
-  bool _isPreRegisterPriceEditable = false;
-  bool _isTniDiscountPriceEditable = false;
-  bool _isVisitorPriceEditable = false;
+  @override
+  void initState() {
+    super.initState();
+    _dbHelper.initDB();
+    _loadPrices();
+  }
 
-  // Toggle edit state for each input
-  void _toggleEdit(String type) {
-    setState(() {
-      if (type == 'member') {
-        _isMemberPriceEditable = !_isMemberPriceEditable;
-      } else if (type == 'preRegister') {
-        _isPreRegisterPriceEditable = !_isPreRegisterPriceEditable;
-      } else if (type == 'tniDiscount') {
-        _isTniDiscountPriceEditable = !_isTniDiscountPriceEditable;
-      } else if (type == 'visitor') {
-        _isVisitorPriceEditable = !_isVisitorPriceEditable;
-      }
-    });
+  // Fungsi untuk memuat data harga dari database
+  Future<void> _loadPrices() async {
+    final prices = await _dbHelper.getPrices();
+    if (prices.isNotEmpty) {
+      setState(() {
+        _isUpdating = true;
+        _priceId = prices[0]['id'];
+        _memberPriceController.text = prices[0]['member_price'].toString();
+        _preRegistrationPriceController.text =
+            prices[0]['pre_registration_price'].toString();
+        _tniDiscountController.text = prices[0]['tni_discount'].toString();
+      });
+    }
+  }
+
+  // Fungsi untuk menambahkan atau memperbarui harga
+  Future<void> _savePrices() async {
+    final memberPrice = double.tryParse(_memberPriceController.text);
+    final preRegistrationPrice =
+        double.tryParse(_preRegistrationPriceController.text);
+    final tniDiscount = double.tryParse(_tniDiscountController.text);
+
+    if (memberPrice == null ||
+        preRegistrationPrice == null ||
+        tniDiscount == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Masukkan nilai yang valid')),
+      );
+      return;
+    }
+
+    if (_isUpdating && _priceId != null) {
+      await showConfirmationDialog(
+        context,
+        'Perbarui Harga',
+        'Apakah kamu yakin ingin memperbarui harga ini?',
+        () async {
+          await _dbHelper.updatePrices(
+            id: _priceId!,
+            memberPrice: memberPrice,
+            preRegistrationPrice: preRegistrationPrice,
+            tniDiscount: tniDiscount,
+          );
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Harga berhasil diperbarui')),
+          );
+
+          _loadPrices(); // Muat ulang data setelah update
+        },
+      );
+    } else {
+      await _dbHelper.insertPrices(
+          memberPrice, preRegistrationPrice, tniDiscount);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Harga berhasil disimpan')),
+      );
+
+      _loadPrices(); // Muat ulang data setelah insert
+    }
+  }
+
+  // Fungsi untuk menghapus harga
+  Future<void> _deletePrices() async {
+    if (_priceId != null) {
+      await showConfirmationDialog(
+        context,
+        'Hapus Harga',
+        'Apakah kamu yakin ingin menghapus harga ini?',
+        () async {
+          await _dbHelper.deletePrices(_priceId!);
+          _memberPriceController.clear();
+          _preRegistrationPriceController.clear();
+          _tniDiscountController.clear();
+          setState(() {
+            _isUpdating = false;
+            _priceId = null;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Harga berhasil dihapus')),
+          );
+        },
+      );
+    }
+  }
+
+  // Fungsi untuk menampilkan dialog konfirmasi
+  Future<void> showConfirmationDialog(BuildContext context, String title,
+      String message, VoidCallback onConfirm) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible:
+          false, // Dialog tidak bisa ditutup dengan mengklik di luar
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(message),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Batal'),
+              onPressed: () {
+                Navigator.of(context)
+                    .pop(); // Tutup dialog tanpa melakukan aksi
+              },
+            ),
+            TextButton(
+              child: Text('Konfirmasi'),
+              onPressed: () {
+                onConfirm(); // Panggil fungsi konfirmasi
+                Navigator.of(context).pop(); // Tutup dialog setelah konfirmasi
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Remove default leading icon
-        title: Row(
-          children: [
-            IconButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                icon: const Icon(Icons.arrow_back, color: Colors.white)),
-            const Text(
-              'Pengaturan',
-              style: TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color.fromARGB(255, 253, 62, 67),
+        title: Text('Pengaturan Harga'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildPriceField('Harga Member', _memberPriceController,
-                _isMemberPriceEditable, 'member'),
-            SizedBox(height: 10),
-            _buildPriceField('Harga Pra-pendaftar', _preRegisterPriceController,
-                _isPreRegisterPriceEditable, 'preRegister'),
-            SizedBox(height: 10),
-            _buildPriceField('Harga Diskon TNI', _tniDiscountPriceController,
-                _isTniDiscountPriceEditable, 'tniDiscount'),
-            SizedBox(height: 10),
-            _buildPriceField('Harga Visitor', _visitorPriceController,
-                _isVisitorPriceEditable, 'visitor'),
+            TextField(
+              controller: _memberPriceController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Harga Member',
+              ),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: _preRegistrationPriceController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Harga Pra-Pendaftar',
+              ),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: _tniDiscountController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Diskon TNI',
+              ),
+            ),
+            SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: _savePrices,
+                  child: Text(_isUpdating ? 'Perbarui' : 'Simpan'),
+                ),
+                ElevatedButton(
+                  onPressed: _deletePrices,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                  ),
+                  child: Text(
+                    'Hapus',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
-    );
-  }
-
-  // Function to build the price input with edit/save icons
-  Widget _buildPriceField(String label, TextEditingController controller,
-      bool isEditable, String type) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: controller,
-                readOnly: !isEditable,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20)),
-                  hintText: 'Enter $label',
-                ),
-              ),
-            ),
-            SizedBox(width: 10),
-            IconButton(
-              icon: Icon(
-                isEditable ? Icons.save : Icons.edit,
-                color: isEditable ? Colors.green : Colors.blue,
-              ),
-              onPressed: () => _toggleEdit(type),
-            ),
-          ],
-        ),
-      ],
     );
   }
 
   @override
   void dispose() {
-    // Dispose controllers
     _memberPriceController.dispose();
-    _preRegisterPriceController.dispose();
-    _tniDiscountPriceController.dispose();
-    _visitorPriceController.dispose();
+    _preRegistrationPriceController.dispose();
+    _tniDiscountController.dispose();
     super.dispose();
   }
 }

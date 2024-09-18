@@ -36,6 +36,9 @@ dependencies:
   persistent_bottom_nav_bar_2: ^5.0.3
   image_picker: ^1.1.2
   intl: ^0.18.0
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+  sqflite_common_ffi: ^2.0.0
 dev_dependencies:
 
   # The "flutter_lints" package below contains a set of recommended lints to
