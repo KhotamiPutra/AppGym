@@ -32,6 +32,15 @@ class _VisitorPageState extends State<VisitorPage> {
                   },
                   child: const Text('Simpan'),
                 ),
+                Row(
+                  children: [
+                    Icon(Icons.history),
+                    SizedBox(
+                      width: 5,
+                    ),
+                    Text("Riwayat Visitor"),
+                  ],
+                )
               ],
             ),
           ),

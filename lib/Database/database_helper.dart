@@ -11,46 +11,40 @@ class DBHelper {
     _database = await openDatabase(
       path,
       onCreate: (db, version) {
-        //tabel member
-        db.execute('''
-          CREATE TABLE members (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            photo BLOB,
-            name TEXT,
-            phone_number TEXT,
-            is_pre_registration INTEGER,
-            is_tni INTEGER,
-            start_date TEXT,
-            end_date TEXT,
-            price REAL
-            trainer_id INTEGER,
-            FOREIGN KEY (trainer_id) REFERENCES trainer (id) ON DELETE SET NULL
-          )
-        ''');
-        //tabel harga
-        db.execute('''
-          CREATE TABLE prices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            member_price REAL,
-            pre_registration_price REAL
-          )
-        ''');
-        //tabel diskon tni
-        db.execute('''
-          CREATE TABLE discounts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            tni_discount REAL
-          )
-        ''');
-        db.execute('''
-          CREATE TABLE trainer (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            photo BLOB,
-            name TEXT,
-            phone_number TEXT,
-            price REAL
-          )
-        ''');
+        // Buat tabel member
+        db.execute('''CREATE TABLE members (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          photo BLOB,
+          name TEXT,
+          phone_number TEXT,
+          is_pre_registration INTEGER,
+          is_tni INTEGER,
+          start_date TEXT,
+          end_date TEXT,
+          price REAL
+        )''');
+
+        // Buat tabel harga
+        db.execute('''CREATE TABLE prices (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          member_price REAL,
+          pre_registration_price REAL
+        )''');
+
+        // Buat tabel diskon TNI
+        db.execute('''CREATE TABLE discounts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          tni_discount REAL
+        )''');
+
+        // Buat tabel trainer
+        db.execute('''CREATE TABLE trainer (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          photo BLOB,
+          name TEXT,
+          phone_number TEXT,
+          price REAL
+        )''');
       },
       version: 1,
     );
@@ -64,16 +58,22 @@ class DBHelper {
     return _database!; // Menggunakan '!' untuk memastikan bahwa _database bukan null
   }
 
-  // Menambahkan harga dasar ke tabel prices
-  Future<void> insertPrices(double memberPrice, double preRegistrationPrice,
-      double tniDiscount) async {
+  // Menambahkan harga dasar ke tabel prices dan discounts
+  Future<void> insertPrices(double memberPrice, double preRegistrationPrice, double tniDiscount) async {
     final db = await database; // Pastikan database sudah diinisialisasi
-    await db.insert('prices', {
-      'member_price': memberPrice,
-      'pre_registration_price': preRegistrationPrice,
-    });
-    await db.insert('discounts', {
-      'tni_discount': tniDiscount,
+    await db.transaction((txn) async {
+      try {
+        await txn.insert('prices', {
+          'member_price': memberPrice,
+          'pre_registration_price': preRegistrationPrice,
+        });
+        await txn.insert('discounts', {
+          'tni_discount': tniDiscount,
+        });
+        print('Prices inserted successfully');
+      } catch (e) {
+        print('Error inserting prices: $e');
+      }
     });
   }
 
@@ -138,41 +138,42 @@ class DBHelper {
     required String startDate,
     required String endDate,
     Uint8List? photo,
-    int? trainerId
   }) async {
     final db = await database; // Pastikan database sudah diinisialisasi
 
     // Ambil harga dari tabel
-    final prices = await db.query('prices');
-    final discounts = await db.query('discounts');
-
+    final prices = await getPrices();
     double finalPrice;
 
     // Tentukan harga berdasarkan status pra-pendaftar dan TNI
-    if (isPreRegistration == 1) {
-      finalPrice = prices[0]['pre_registration_price'] as double;
+    if (prices.isNotEmpty) {
+      if (isPreRegistration == 1) {
+        finalPrice = prices[0]['pre_registration_price'] as double;
+      } else {
+        finalPrice = prices[0]['member_price'] as double;
+      }
+
+      // Jika anggota TNI, berikan diskon
+      if (isTni == 1) {
+        final double discount = prices[0]['tni_discount'] as double;
+        finalPrice -= discount;
+      }
+
+      // Masukkan data member baru
+      await db.insert('members', {
+        'name': name,
+        'phone_number': phoneNumber,
+        'is_pre_registration': isPreRegistration,
+        'is_tni': isTni,
+        'start_date': startDate,
+        'end_date': endDate,
+        'price': finalPrice,
+        'photo': photo,
+      });
+      print('Member inserted successfully');
     } else {
-      finalPrice = prices[0]['member_price'] as double;
+      print('Error: Prices not found');
     }
-
-    // Jika anggota TNI, berikan diskon
-    if (isTni == 1) {
-      final discount = discounts[0]['tni_discount'] as double;
-      finalPrice -= discount;
-    }
-
-    // Masukkan data member baru
-    await db.insert('members', {
-      'name': name,
-      'phone_number': phoneNumber,
-      'is_pre_registration': isPreRegistration,
-      'is_tni': isTni,
-      'start_date': startDate,
-      'end_date': endDate,
-      'price': finalPrice,
-      'photo': photo,
-      'trainer_id': trainerId,
-    });
   }
 
   // Mengambil semua member
@@ -220,39 +221,4 @@ class DBHelper {
     final db = await database; // Pastikan database sudah diinisialisasi
     await db.close();
   }
-  
-  // Update data trainer
-  Future<void> updateTrainer({
-    required int id,
-    required String name,
-    required String phoneNumber,
-    required double price,
-    Uint8List? photo,
-  }) async {
-    final db = await database; // Pastikan database sudah diinisialisasi
-    await db.update(
-      'trainer',
-      {
-        'name': name,
-        'phone_number': phoneNumber,
-        'price': price,
-        'photo': photo,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  // Hapus trainer
-  Future<void> deleteTrainer(int id) async {
-    final db = await database; // Pastikan database sudah diinisialisasi
-    await db.delete('trainer', where: 'id = ?', whereArgs: [id]);
-  }
-
-  // Mengambil semua trainer
-  Future<List<Map<String, dynamic>>> getTrainers() async {
-    final db = await database; // Pastikan database sudah diinisialisasi
-    return await db.query('trainer');
-  }
-
 }
