@@ -23,6 +23,8 @@ class DBHelper {
             start_date TEXT,
             end_date TEXT,
             price REAL
+            trainer_id INTEGER,
+            FOREIGN KEY (trainer_id) REFERENCES trainer (id) ON DELETE SET NULL
           )
         ''');
         //tabel harga
@@ -136,6 +138,7 @@ class DBHelper {
     required String startDate,
     required String endDate,
     Uint8List? photo,
+    int? trainerId
   }) async {
     final db = await database; // Pastikan database sudah diinisialisasi
 
@@ -168,6 +171,7 @@ class DBHelper {
       'end_date': endDate,
       'price': finalPrice,
       'photo': photo,
+      'trainer_id': trainerId,
     });
   }
 
@@ -216,4 +220,39 @@ class DBHelper {
     final db = await database; // Pastikan database sudah diinisialisasi
     await db.close();
   }
+  
+  // Update data trainer
+  Future<void> updateTrainer({
+    required int id,
+    required String name,
+    required String phoneNumber,
+    required double price,
+    Uint8List? photo,
+  }) async {
+    final db = await database; // Pastikan database sudah diinisialisasi
+    await db.update(
+      'trainer',
+      {
+        'name': name,
+        'phone_number': phoneNumber,
+        'price': price,
+        'photo': photo,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Hapus trainer
+  Future<void> deleteTrainer(int id) async {
+    final db = await database; // Pastikan database sudah diinisialisasi
+    await db.delete('trainer', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Mengambil semua trainer
+  Future<List<Map<String, dynamic>>> getTrainers() async {
+    final db = await database; // Pastikan database sudah diinisialisasi
+    return await db.query('trainer');
+  }
+
 }
