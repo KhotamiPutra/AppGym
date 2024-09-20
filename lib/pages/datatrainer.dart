@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart';
 import 'dart:io';
+
+import 'package:sqflite/sqflite.dart';
 
 // Dummy model class for Trainer
 class Trainer {
@@ -41,28 +44,68 @@ class Trainer {
 
 // Dummy Database helper class for Trainer
 class DBhelper {
-  final List<Map<String, dynamic>> _trainerList = [];
+  Database? _database;
+
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDB();
+    return _database!;
+  }
+
+  Future<Database> _initDB() async {
+    String path = join(await getDatabasesPath(), 'trainer.db');
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE trainers(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            phoneNumber TEXT,
+            price REAL,
+            imagePath TEXT
+          )
+        ''');
+      },
+    );
+  }
 
   Future<void> insertTrainer(Trainer trainer) async {
-    trainer.id = _trainerList.length + 1; // Assign id
-    _trainerList.add(trainer.toMap());
+    final db = await database;
+    await db.insert(
+      'trainers',
+      trainer.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<void> updateTrainer(Trainer trainer) async {
-    final index = _trainerList.indexWhere((t) => t['id'] == trainer.id);
-    if (index != -1) {
-      _trainerList[index] = trainer.toMap();
-    }
+    final db = await database;
+    await db.update(
+      'trainers',
+      trainer.toMap(),
+      where: 'id = ?',
+      whereArgs: [trainer.id],
+    );
   }
 
   Future<void> deleteTrainer(int? id) async {
-    _trainerList.removeWhere((t) => t['id'] == id);
+    final db = await database;
+    await db.delete(
+      'trainers',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<List<Trainer>> getTrainers() async {
-    return _trainerList
-        .map((trainerMap) => Trainer.fromMap(trainerMap))
-        .toList();
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('trainers');
+
+    return List.generate(maps.length, (i) {
+      return Trainer.fromMap(maps[i]);
+    });
   }
 }
 
@@ -81,6 +124,19 @@ class Datatrainer extends StatefulWidget {
 }
 
 class _DatatrainerState extends State<Datatrainer> {
+  @override
+  void initState() {
+    super.initState();
+    _loadTrainers(); // Panggil fungsi untuk memuat data
+  }
+
+  Future<void> _loadTrainers() async {
+    final trainers = await _dbHelper.getTrainers(); // Ambil data dari database
+    setState(() {
+      _trainers.addAll(trainers); // Tambahkan data yang diambil ke dalam daftar
+    });
+  }
+
   File? _image;
   final List<Trainer> _trainers = [];
   final DBhelper _dbHelper = DBhelper();
@@ -89,8 +145,8 @@ class _DatatrainerState extends State<Datatrainer> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
 
-// Fungsi untuk menampilkan modal tambah trainer
-  void _showAddTrainerModal() {
+  // Fungsi untuk menampilkan modal tambah trainer
+  void _showAddTrainerModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -167,27 +223,36 @@ class _DatatrainerState extends State<Datatrainer> {
 
   // Fungsi untuk menambah trainer baru
   Future<void> _addTrainer() async {
-    final name = nameController.text;
-    final phoneNumber = phoneController.text;
-    final price = double.tryParse(priceController.text) ?? 0.0;
+    try {
+      final name = nameController.text;
+      final phoneNumber = phoneController.text;
+      final price = double.tryParse(priceController.text) ?? 0.0;
 
-    final newTrainer = Trainer(
-      name: name,
-      phoneNumber: phoneNumber,
-      price: price,
-      imagePath: _image != null ? _image!.path : null,
-    );
+      if (name.isEmpty || phoneNumber.isEmpty || price <= 0) {
+        // Tampilkan pesan kesalahan
+        return;
+      }
 
-    await _dbHelper.insertTrainer(newTrainer);
+      final newTrainer = Trainer(
+        name: name,
+        phoneNumber: phoneNumber,
+        price: price,
+        imagePath: _image?.path,
+      );
 
-    // Refresh the list of trainers
-    setState(() {
-      _trainers.add(newTrainer);
-      _image = null; // Clear image after adding
-      nameController.clear();
-      phoneController.clear();
-      priceController.clear();
-    });
+      await _dbHelper.insertTrainer(newTrainer);
+
+      setState(() {
+        _trainers.add(newTrainer);
+        _image = null;
+        nameController.clear();
+        phoneController.clear();
+        priceController.clear();
+      });
+    } catch (e) {
+      // Tampilkan pesan kesalahan
+      print('Error adding trainer: $e');
+    }
   }
 
   // Fungsi untuk memperbarui trainer
@@ -221,7 +286,7 @@ class _DatatrainerState extends State<Datatrainer> {
   }
 
   // Fungsi untuk menampilkan modal edit trainer
-  void _showEditTrainerModal(Trainer trainer) {
+  void _showEditTrainerModal(Trainer trainer, BuildContext context) {
     // Set data ke controller
     nameController.text = trainer.name;
     phoneController.text = trainer.phoneNumber;
@@ -345,7 +410,8 @@ class _DatatrainerState extends State<Datatrainer> {
                                       onSelected: (value) {
                                         switch (value) {
                                           case 'Edit':
-                                            _showEditTrainerModal(trainer);
+                                            _showEditTrainerModal(
+                                                trainer, context);
                                             break;
                                           case 'Delete':
                                             _deleteTrainer(trainer);
@@ -401,7 +467,7 @@ class _DatatrainerState extends State<Datatrainer> {
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: ElevatedButton(
-                      onPressed: _showAddTrainerModal,
+                      onPressed: () => _showAddTrainerModal(context),
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
