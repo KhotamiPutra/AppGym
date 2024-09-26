@@ -24,7 +24,7 @@ class DBHelper {
           end_date TEXT,
           trainer_id INTEGER,
           price REAL,
-          is_active INTEGER DEFAULT 1,  -- Member diatur aktif secara default
+          is_active INTEGER DEFAULT 1,
           FOREIGN KEY(trainer_id) REFERENCES trainer(id)
         )''');
 
@@ -284,7 +284,6 @@ class DBHelper {
   required double price,
 }) async {
   final db = await database;
-
   await db.insert('trainer', {
     'name': name,
     'phone_number': phoneNumber,
@@ -308,7 +307,6 @@ Future<void> updateTrainer({
   required double price,
 }) async {
   final db = await database;
-
   await db.update(
     'trainer',
     {

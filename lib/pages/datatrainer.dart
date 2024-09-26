@@ -1,3 +1,4 @@
+import 'package:appgym/Database/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -24,7 +25,7 @@ class Trainer {
     double? price,
   }) {
     return Trainer(
-      id: this.id,
+      id: id,
       name: name ?? this.name,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       photo: photo ?? this.photo,
@@ -107,13 +108,16 @@ class _DatatrainerState extends State<Datatrainer> {
                                           _showEditTrainerModal(trainer);
                                           break;
                                         case 'Delete':
-                                          _deleteTrainer(trainer);
+                                          _deleteTrainer(trainer.id);
                                           break;
                                       }
                                     },
                                     itemBuilder: (context) => [
-                                      const PopupMenuItem(value: 'Edit', child: Text('Edit')),
-                                      const PopupMenuItem(value: 'Delete', child: Text('Delete')),
+                                      const PopupMenuItem(
+                                          value: 'Edit', child: Text('Edit')),
+                                      const PopupMenuItem(
+                                          value: 'Delete',
+                                          child: Text('Delete')),
                                     ],
                                   ),
                                 ],
@@ -154,7 +158,8 @@ class _DatatrainerState extends State<Datatrainer> {
       isScrollControlled: true,
       builder: (context) {
         return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -210,7 +215,8 @@ class _DatatrainerState extends State<Datatrainer> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
     setState(() {
       if (pickedFile != null) {
         _image = File(pickedFile.path);
@@ -228,11 +234,25 @@ class _DatatrainerState extends State<Datatrainer> {
     }
 
     final newTrainer = Trainer(
-      id: _trainers.length + 1, // Ganti dengan logika ID yang lebih baik jika perlu
+      id: _trainers.length +
+          0, // Ganti dengan logika ID yang lebih baik jika perlu
       name: name,
       phoneNumber: phoneNumber,
       price: price,
       photo: _image?.path,
+    );
+
+    final dbHelper = DBHelper();
+
+    // Memanggil insertTrainer dengan parameter yang benar
+    await dbHelper.insertTrainer(
+      newTrainer,
+      name: newTrainer.name,
+      phoneNumber: newTrainer.phoneNumber,
+      photo: _image != null
+          ? await _image!.readAsBytes()
+          : null, // Mengonversi path menjadi Uint8List jika ada gambar
+      price: newTrainer.price,
     );
 
     setState(() {
@@ -244,11 +264,18 @@ class _DatatrainerState extends State<Datatrainer> {
     });
   }
 
-  Future<void> _deleteTrainer(Trainer trainer) async {
-    setState(() {
-      _trainers.remove(trainer);
-    });
-  }
+  Future<void> _deleteTrainer(int id) async {
+  final dbHelper = DBHelper();
+  
+  // Panggil fungsi deleteTrainer untuk menghapus trainer berdasarkan ID
+  await dbHelper.deleteTrainer(id);
+
+  setState(() {
+    // Hapus trainer dari daftar yang ditampilkan di UI
+    _trainers.removeWhere((trainer) => trainer.id == id);
+  });
+}
+
 
   void _showEditTrainerModal(Trainer trainer) {
     nameController.text = trainer.name;
@@ -260,7 +287,8 @@ class _DatatrainerState extends State<Datatrainer> {
       isScrollControlled: true,
       builder: (context) {
         return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -316,24 +344,41 @@ class _DatatrainerState extends State<Datatrainer> {
   }
 
   Future<void> _updateTrainer(Trainer trainer) async {
-    final updatedName = nameController.text;
-    final phoneNumber = phoneController.text;
-    final price = double.tryParse(priceController.text) ?? 0.0;
+  final updatedName = nameController.text;
+  final updatedPhoneNumber = phoneController.text;
+  final updatedPrice = double.tryParse(priceController.text) ?? 0.0;
 
-    final updatedTrainer = trainer.copyWith(
-      name: updatedName,
-      phoneNumber: phoneNumber,
-      price: price,
-      photo: _image?.path ?? trainer.photo,
-    );
-
-    setState(() {
-      int index = _trainers.indexOf(trainer);
-      _trainers[index] = updatedTrainer;
-      _image = null;
-      nameController.clear();
-      phoneController.clear();
-      priceController.clear();
-    });
+  if (updatedName.isEmpty || updatedPhoneNumber.isEmpty || updatedPrice <= 0) {
+    return; // Tampilkan pesan kesalahan jika perlu
   }
+
+  final updatedTrainer = Trainer(
+    id: trainer.id, // Menggunakan ID yang sama
+    name: updatedName,
+    phoneNumber: updatedPhoneNumber,
+    price: updatedPrice,
+    photo: _image?.path ?? trainer.photo, // Jika ada foto baru, ambil dari _image
+  );
+
+  final dbHelper = DBHelper();
+
+  await dbHelper.updateTrainer(
+    id: updatedTrainer.id, // ID dari trainer yang diupdate
+    name: updatedTrainer.name,
+    phoneNumber: updatedTrainer.phoneNumber,
+    photo: _image != null ? await _image!.readAsBytes() : null, // Ambil data foto jika ada
+    price: updatedTrainer.price,
+  );
+
+  setState(() {
+    final index = _trainers.indexWhere((t) => t.id == trainer.id);
+    if (index != -1) {
+      _trainers[index] = updatedTrainer; // Memperbarui data di UI
+    }
+    _image = null; // Mengosongkan gambar yang dipilih
+    nameController.clear();
+    phoneController.clear();
+    priceController.clear();
+  });
+}
 }
