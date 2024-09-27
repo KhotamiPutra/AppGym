@@ -46,7 +46,7 @@ class _AppWrapperState extends State<AppWrapper> {
         appBar: myAppBar,
         paddingTop: paddingTop,
       ),
-      Datatrainer(appBar: myAppBar, paddingTop: paddingTop),
+      TrainerPage(appBar: myAppBar, paddingTop: paddingTop),
       VisitorPage(),
     ];
   }
@@ -96,7 +96,7 @@ class _AppWrapperState extends State<AppWrapper> {
                 onPressed: () {
                   // Use navigatorKey to perform navigation
                   _navigatorKey.currentState?.push(
-                    MaterialPageRoute(builder: (context) => SettingPage()),
+                    MaterialPageRoute(builder: (context) => PriceSettingPage()),
                   );
                 },
                 icon: const Icon(Icons.settings))

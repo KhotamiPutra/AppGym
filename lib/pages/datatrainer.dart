@@ -1,13 +1,12 @@
-import 'package:appgym/Database/database_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class Trainer {
   final int id;
   final String name;
   final String phoneNumber;
-  final String? photo; // Path ke foto (jika ada)
+  final String? photo;
   final double price;
 
   Trainer({
@@ -17,368 +16,270 @@ class Trainer {
     this.photo,
     required this.price,
   });
-
-  Trainer copyWith({
-    String? name,
-    String? phoneNumber,
-    String? photo,
-    double? price,
-  }) {
-    return Trainer(
-      id: id,
-      name: name ?? this.name,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      photo: photo ?? this.photo,
-      price: price ?? this.price,
-    );
-  }
 }
 
-class Datatrainer extends StatefulWidget {
+class TrainerPage extends StatefulWidget {
   final AppBar appBar;
   final double paddingTop;
 
-  const Datatrainer({
-    super.key,
-    required this.appBar,
-    required this.paddingTop,
-  });
-
+  const TrainerPage(
+      {super.key, required this.appBar, required this.paddingTop});
   @override
-  State<Datatrainer> createState() => _DatatrainerState();
+  _TrainerPageState createState() => _TrainerPageState();
 }
 
-class _DatatrainerState extends State<Datatrainer> {
+class _TrainerPageState extends State<TrainerPage> {
   final List<Trainer> _trainers = [];
-  File? _image;
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController priceController = TextEditingController();
+  int? _currentTrainerId;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneNumberController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  String? _photoPath;
+
+  final ImagePicker _picker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: LayoutBuilder(builder: (context, constraints) {
-        return Stack(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Stack(
           children: [
-            Padding(
-              padding: EdgeInsets.only(top: widget.paddingTop),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ListView.builder(
-                  itemCount: _trainers.length,
-                  itemBuilder: (context, index) {
-                    final trainer = _trainers[index];
-                    return Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: const BorderSide(color: Colors.black, width: 0.5),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: constraints.maxWidth * 0.05,
-                                    backgroundImage: trainer.photo != null
-                                        ? FileImage(File(trainer.photo!))
-                                        : null,
-                                    child: trainer.photo == null
-                                        ? const Icon(Icons.person)
-                                        : null,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      trainer.name,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: constraints.maxWidth * 0.03,
+            Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _trainers.length,
+                    itemBuilder: (context, index) {
+                      final trainer = _trainers[index];
+                      return Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side:
+                              const BorderSide(color: Colors.black, width: 0.5),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 24,
+                                      backgroundImage: trainer.photo != null
+                                          ? FileImage(File(trainer.photo!))
+                                          : null,
+                                      child: trainer.photo == null
+                                          ? const Icon(Icons.person)
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        trainer.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  PopupMenuButton<String>(
-                                    onSelected: (value) {
-                                      switch (value) {
-                                        case 'Edit':
-                                          _showEditTrainerModal(trainer);
-                                          break;
-                                        case 'Delete':
-                                          _deleteTrainer(trainer.id);
-                                          break;
-                                      }
-                                    },
-                                    itemBuilder: (context) => [
-                                      const PopupMenuItem(
-                                          value: 'Edit', child: Text('Edit')),
-                                      const PopupMenuItem(
-                                          value: 'Delete',
-                                          child: Text('Delete')),
-                                    ],
-                                  ),
+                                    PopupMenuButton<String>(
+                                      onSelected: (value) {
+                                        switch (value) {
+                                          case 'Edit':
+                                            _showEditTrainerModal(trainer);
+                                            break;
+                                          case 'Delete':
+                                            _deleteTrainer(trainer.id);
+                                            break;
+                                        }
+                                      },
+                                      itemBuilder: (context) => [
+                                        const PopupMenuItem(
+                                            value: 'Edit', child: Text('Edit')),
+                                        const PopupMenuItem(
+                                            value: 'Delete',
+                                            child: Text('Delete')),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(trainer.phoneNumber),
+                                  Text('Rp${trainer.price.toStringAsFixed(2)}'),
                                 ],
                               ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(trainer.phoneNumber),
-                                Text('Rp${trainer.price.toStringAsFixed(2)}'),
-                              ],
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ),
-            Positioned(
-              bottom: 16,
-              right: 16,
-              child: FloatingActionButton(
-                onPressed: () => _showAddTrainerModal(context),
-                child: const Icon(Icons.add),
-              ),
+                Positioned(
+                  right: 10,
+                  bottom: 10,
+                  child: ElevatedButton(
+                    onPressed: _showAddTrainerModal,
+                    child: const Text('Tambah Trainer'),
+                  ),
+                ),
+              ],
             ),
           ],
-        );
-      }),
+        ),
+      ),
     );
   }
 
-  void _showAddTrainerModal(BuildContext context) {
+  void _showAddTrainerModal() {
+    _currentTrainerId = null; // Reset ID
+    _nameController.clear();
+    _phoneNumberController.clear();
+    _priceController.clear();
+    _photoPath = null;
+
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
       builder: (context) {
-        return Padding(
-          padding:
-              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: _image == null
-                        ? Container(
-                            height: 100,
-                            width: 100,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.add_a_photo),
-                          )
-                        : Image.file(
-                            _image!,
-                            height: 100,
-                            width: 100,
-                            fit: BoxFit.cover,
-                          ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Nama'),
-                  ),
-                  TextField(
-                    controller: phoneController,
-                    decoration: const InputDecoration(labelText: 'No. Telepon'),
-                    keyboardType: TextInputType.phone,
-                  ),
-                  TextField(
-                    controller: priceController,
-                    decoration: const InputDecoration(labelText: 'Harga'),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      _addTrainer();
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Tambah'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
+        return _buildTrainerForm();
       },
     );
+  }
+
+  void _showEditTrainerModal(Trainer trainer) {
+    _currentTrainerId = trainer.id;
+    _nameController.text = trainer.name;
+    _phoneNumberController.text = trainer.phoneNumber;
+    _priceController.text = trainer.price.toString();
+    _photoPath = trainer.photo;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return _buildTrainerForm();
+      },
+    );
+  }
+
+  Widget _buildTrainerForm() {
+    return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView(
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: _pickImage, // Panggil fungsi untuk memilih gambar
+                  child: CircleAvatar(
+                    radius: 40,
+                    backgroundImage: _photoPath != null
+                        ? FileImage(File(_photoPath!))
+                        : null,
+                    child: _photoPath == null
+                        ? const Icon(Icons.camera_alt, size: 40)
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(labelText: 'Nama Trainer'),
+                ),
+                TextField(
+                  controller: _phoneNumberController,
+                  decoration: const InputDecoration(labelText: 'Nomor Telepon'),
+                ),
+                TextField(
+                  controller: _priceController,
+                  decoration: const InputDecoration(labelText: 'Harga'),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _saveTrainer,
+                  child:
+                      Text(_currentTrainerId == null ? 'Tambah' : 'Perbarui'),
+                ),
+              ],
+            ),
+          ],
+        ));
   }
 
   Future<void> _pickImage() async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _photoPath = pickedFile.path; // Simpan path gambar yang dipilih
+      });
+    }
+  }
+
+  void _saveTrainer() {
+    final name = _nameController.text;
+    final phoneNumber = _phoneNumberController.text;
+    final price = double.tryParse(_priceController.text);
+
+    if (name.isEmpty || phoneNumber.isEmpty || price == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Masukkan data yang valid')),
+      );
+      return;
+    }
+
+    if (_currentTrainerId == null) {
+      // Tambah Trainer Baru
+      final newTrainer = Trainer(
+        id: _trainers.length + 1,
+        name: name,
+        phoneNumber: phoneNumber,
+        photo: _photoPath,
+        price: price,
+      );
+      setState(() {
+        _trainers.add(newTrainer);
+      });
+    } else {
+      // Update Trainer
+      final index =
+          _trainers.indexWhere((trainer) => trainer.id == _currentTrainerId);
+      if (index != -1) {
+        setState(() {
+          _trainers[index] = Trainer(
+            id: _currentTrainerId!,
+            name: name,
+            phoneNumber: phoneNumber,
+            photo: _photoPath,
+            price: price,
+          );
+        });
       }
-    });
-  }
-
-  Future<void> _addTrainer() async {
-    final name = nameController.text;
-    final phoneNumber = phoneController.text;
-    final price = double.tryParse(priceController.text) ?? 0.0;
-
-    if (name.isEmpty || phoneNumber.isEmpty || price <= 0) {
-      return; // Tampilkan pesan kesalahan jika perlu
     }
 
-    final newTrainer = Trainer(
-      id: _trainers.length +
-          0, // Ganti dengan logika ID yang lebih baik jika perlu
-      name: name,
-      phoneNumber: phoneNumber,
-      price: price,
-      photo: _image?.path,
-    );
+    Navigator.of(context).pop(); // Tutup modal
+  }
 
-    final dbHelper = DBHelper();
-
-    // Memanggil insertTrainer dengan parameter yang benar
-    await dbHelper.insertTrainer(
-      newTrainer,
-      name: newTrainer.name,
-      phoneNumber: newTrainer.phoneNumber,
-      photo: _image != null
-          ? await _image!.readAsBytes()
-          : null, // Mengonversi path menjadi Uint8List jika ada gambar
-      price: newTrainer.price,
-    );
-
+  void _deleteTrainer(int trainerId) {
     setState(() {
-      _trainers.add(newTrainer);
-      _image = null;
-      nameController.clear();
-      phoneController.clear();
-      priceController.clear();
+      _trainers.removeWhere((trainer) => trainer.id == trainerId);
     });
-  }
-
-  Future<void> _deleteTrainer(int id) async {
-  final dbHelper = DBHelper();
-  
-  // Panggil fungsi deleteTrainer untuk menghapus trainer berdasarkan ID
-  await dbHelper.deleteTrainer(id);
-
-  setState(() {
-    // Hapus trainer dari daftar yang ditampilkan di UI
-    _trainers.removeWhere((trainer) => trainer.id == id);
-  });
-}
-
-
-  void _showEditTrainerModal(Trainer trainer) {
-    nameController.text = trainer.name;
-    phoneController.text = trainer.phoneNumber;
-    priceController.text = trainer.price.toString();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        return Padding(
-          padding:
-              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: _image == null && trainer.photo == null
-                        ? Container(
-                            height: 100,
-                            width: 100,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.add_a_photo),
-                          )
-                        : Image.file(
-                            _image ?? File(trainer.photo!),
-                            height: 100,
-                            width: 100,
-                            fit: BoxFit.cover,
-                          ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Nama'),
-                  ),
-                  TextField(
-                    controller: phoneController,
-                    decoration: const InputDecoration(labelText: 'No. Telepon'),
-                    keyboardType: TextInputType.phone,
-                  ),
-                  TextField(
-                    controller: priceController,
-                    decoration: const InputDecoration(labelText: 'Harga'),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      _updateTrainer(trainer);
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Update'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Trainer berhasil dihapus')),
     );
   }
 
-  Future<void> _updateTrainer(Trainer trainer) async {
-  final updatedName = nameController.text;
-  final updatedPhoneNumber = phoneController.text;
-  final updatedPrice = double.tryParse(priceController.text) ?? 0.0;
-
-  if (updatedName.isEmpty || updatedPhoneNumber.isEmpty || updatedPrice <= 0) {
-    return; // Tampilkan pesan kesalahan jika perlu
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneNumberController.dispose();
+    _priceController.dispose();
+    super.dispose();
   }
-
-  final updatedTrainer = Trainer(
-    id: trainer.id, // Menggunakan ID yang sama
-    name: updatedName,
-    phoneNumber: updatedPhoneNumber,
-    price: updatedPrice,
-    photo: _image?.path ?? trainer.photo, // Jika ada foto baru, ambil dari _image
-  );
-
-  final dbHelper = DBHelper();
-
-  await dbHelper.updateTrainer(
-    id: updatedTrainer.id, // ID dari trainer yang diupdate
-    name: updatedTrainer.name,
-    phoneNumber: updatedTrainer.phoneNumber,
-    photo: _image != null ? await _image!.readAsBytes() : null, // Ambil data foto jika ada
-    price: updatedTrainer.price,
-  );
-
-  setState(() {
-    final index = _trainers.indexWhere((t) => t.id == trainer.id);
-    if (index != -1) {
-      _trainers[index] = updatedTrainer; // Memperbarui data di UI
-    }
-    _image = null; // Mengosongkan gambar yang dipilih
-    nameController.clear();
-    phoneController.clear();
-    priceController.clear();
-  });
-}
 }

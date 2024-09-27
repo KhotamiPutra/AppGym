@@ -1,4 +1,3 @@
-import 'package:appgym/pages/datatrainer.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'dart:typed_data'; // Untuk Uint8List
@@ -18,13 +17,13 @@ class DBHelper {
           photo BLOB,
           name TEXT,
           phone_number TEXT,
-          is_pre_registration INTEGER,
-          is_tni INTEGER,
+          is_pre_registration INTEGER, 
+          is_tni INTEGER, 
           start_date TEXT,
           end_date TEXT,
           trainer_id INTEGER,
+          is_active TEXT NOT NULL,
           price REAL,
-          is_active INTEGER DEFAULT 1,
           FOREIGN KEY(trainer_id) REFERENCES trainer(id)
         )''');
 
@@ -32,12 +31,7 @@ class DBHelper {
         db.execute('''CREATE TABLE prices (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           member_price REAL,
-          pre_registration_price REAL
-        )''');
-
-        // Buat tabel diskon TNI
-        db.execute('''CREATE TABLE discounts (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          pre_registration_price REAL,
           tni_discount REAL
         )''');
 
@@ -65,201 +59,117 @@ class DBHelper {
     return _database!; // Menggunakan '!' untuk memastikan bahwa _database bukan null
   }
 
-  //CRUD tabel member
-  // Menambahkan member baru dengan perhitungan harga
+  // CRUD tabel member
   Future<void> insertMember({
+    Uint8List? photo,
     required String name,
     required String phoneNumber,
-    required int isPreRegistration,
-    required int isTni,
+    required int isPreRegistration, 
+    required int isTni, 
     required String startDate,
     required String endDate,
-    int? trainerId,
-    Uint8List? photo,
+    required int trainerId,
+    required String isActive, // sekarang menggunakan TEXT 'aktif' atau 'nonaktif'
+    required double price,
   }) async {
-    final db = await database; // Pastikan database sudah diinisialisasi
-
-    final prices = await getPrices();
-    double finalPrice;
-
-    if (prices.isNotEmpty) {
-      if (isPreRegistration == 1) {
-        finalPrice = prices[0]['pre_registration_price'] as double;
-      } else {
-        finalPrice = prices[0]['member_price'] as double;
-      }
-
-      if (isTni == 1) {
-        final double discount = prices[0]['tni_discount'] as double;
-        finalPrice -= discount;
-      }
-
-      if (trainerId != null) {
-        final List<Map<String, dynamic>> trainerData = await db.query(
-          'trainer',
-          where: 'id = ?',
-          whereArgs: [trainerId],
-        );
-        if (trainerData.isNotEmpty) {
-          final double trainerPrice = trainerData[0]['price'] as double;
-          finalPrice += trainerPrice;
-        } else {
-          print('Error: Trainer not found');
-        }
-      }
-
-      await db.insert('members', {
-        'name': name,
-        'phone_number': phoneNumber,
-        'is_pre_registration': isPreRegistration,
-        'is_tni': isTni,
-        'start_date': startDate,
-        'end_date': endDate,
-        'price': finalPrice,
-        'photo': photo,
-        'trainer_id': trainerId,
-        'is_active': 1, // Menandakan member baru aktif
-      });
-      print('Member inserted successfully with price: $finalPrice');
-    } else {
-      print('Error: Prices not found');
-    }
+    final db = await database;
+    await db.insert('members', {
+      'photo': photo,
+      'name': name,
+      'phone_number': phoneNumber,
+      'is_pre_registration': isPreRegistration, // 0 atau 1
+      'is_tni': isTni, // 0 atau 1
+      'start_date': startDate,
+      'end_date': endDate,
+      'trainer_id': trainerId,
+      'is_active': isActive, // 'aktif' atau 'nonaktif'
+      'price': price,
+    });
+    print('Member inserted successfully');
   }
 
-  // Mengambil semua member yang aktif
-  Future<List<Map<String, dynamic>>> getActiveMembers() async {
-    final db = await database; // Pastikan database sudah diinisialisasi
-    final List<Map<String, dynamic>> members = await db.query(
-      'members',
-      where: 'is_active = ?', // Hanya mengambil member yang aktif
-      whereArgs: [1],
-    );
-
-    // Mengambil data trainer untuk setiap member
-    for (var member in members) {
-      if (member['trainer_id'] != null) {
-        final trainerData = await db.query(
-          'trainer',
-          where: 'id = ?',
-          whereArgs: [member['trainer_id']],
-        );
-        member['trainer'] = trainerData.isNotEmpty ? trainerData[0] : null;
-      }
-    }
-    return members;
+  // Mengambil Semua Member
+  Future<List<Map<String, dynamic>>> getAllMembers() async {
+    final db = await database;
+    return await db.query('members');
   }
 
-  // Update data member
+  // Update member
   Future<void> updateMember({
     required int id,
+    Uint8List? photo,
     required String name,
     required String phoneNumber,
     required int isPreRegistration,
     required int isTni,
     required String startDate,
     required String endDate,
-    Uint8List? photo,
-    int? trainerId,
-    int? isActive, // Jika ingin mengupdate status aktif/non-aktif
+    required int trainerId,
+    required String isActive,
+    required double price,
   }) async {
-    final db = await database; // Pastikan database sudah diinisialisasi
+    final db = await database;
     await db.update(
       'members',
       {
+        'photo': photo,
         'name': name,
         'phone_number': phoneNumber,
         'is_pre_registration': isPreRegistration,
         'is_tni': isTni,
         'start_date': startDate,
         'end_date': endDate,
-        'photo': photo,
         'trainer_id': trainerId,
-        if (isActive != null) 'is_active': isActive, // Hanya mengupdate jika isActive tidak null
+        'is_active': isActive,
+        'price': price,
       },
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 
-  // Menonaktifkan member (logika untuk soft delete)
-  Future<void> deactivateMember(int id) async {
-    final db = await database; // Pastikan database sudah diinisialisasi
-    await db.update(
-      'members',
-      {
-        'is_active': 0, // Menandakan member non-aktif
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  // Hapus member
+  // Menghapus Member
   Future<void> deleteMember(int id) async {
-    final db = await database; // Pastikan database sudah diinisialisasi
+    final db = await database;
     await db.delete('members', where: 'id = ?', whereArgs: [id]);
   }
-//============================================
 
-  // Menambahkan harga dasar ke tabel prices dan discounts
-  Future<void> insertPrices(double memberPrice, double preRegistrationPrice,
-      double tniDiscount) async {
-    final db = await database; // Pastikan database sudah diinisialisasi
-    await db.transaction((txn) async {
-      try {
-        await txn.insert('prices', {
-          'member_price': memberPrice,
-          'pre_registration_price': preRegistrationPrice,
-        });
-        await txn.insert('discounts', {
-          'tni_discount': tniDiscount,
-        });
-        print('Prices inserted successfully');
-      } catch (e) {
-        print('Error inserting prices: $e');
-      }
+  // ===========================================
+  
+  // CRUD tabel price
+  Future<void> insertPrice({
+    required double memberPrice,
+    required double preRegistrationPrice,
+    required double tniDiscount,
+  }) async {
+    final db = await database;
+    await db.insert('prices', {
+      'member_price': memberPrice,
+      'pre_registration_price': preRegistrationPrice,
+      'tni_discount': tniDiscount,
     });
+    print('Price inserted successfully');
   }
 
-  //CRUD Harga
-  // Mengambil harga dari tabel prices dan discounts
-  Future<List<Map<String, dynamic>>> getPrices() async {
-    final db = await database; // Pastikan database sudah diinisialisasi
-    final prices = await db.query('prices');
-    final discounts = await db.query('discounts');
-    if (prices.isNotEmpty && discounts.isNotEmpty) {
-      return [
-        {
-          'id': prices[0]['id'],
-          'member_price': prices[0]['member_price'],
-          'pre_registration_price': prices[0]['pre_registration_price'],
-          'tni_discount': discounts[0]['tni_discount'],
-        }
-      ];
-    }
-    return [];
+  // Mengambil Semua Prices
+  Future<List<Map<String, dynamic>>> getAllPrices() async {
+    final db = await database;
+    return await db.query('prices');
   }
 
-  // Memperbarui harga
-  Future<void> updatePrices({
+  // Update Prices
+  Future<void> updatePrice({
     required int id,
     required double memberPrice,
     required double preRegistrationPrice,
     required double tniDiscount,
   }) async {
-    final db = await database; // Pastikan database sudah diinisialisasi
+    final db = await database;
     await db.update(
       'prices',
       {
         'member_price': memberPrice,
         'pre_registration_price': preRegistrationPrice,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    await db.update(
-      'discounts',
-      {
         'tni_discount': tniDiscount,
       },
       where: 'id = ?',
@@ -267,65 +177,64 @@ class DBHelper {
     );
   }
 
-  // Hapus harga
-  Future<void> deletePrices(int id) async {
-    final db = await database; // Pastikan database sudah diinisialisasi
+  // Menghapus Prices
+  Future<void> deletePrice(int id) async {
+    final db = await database;
     await db.delete('prices', where: 'id = ?', whereArgs: [id]);
-    await db.delete('discounts', where: 'id = ?', whereArgs: [id]);
   }
+
   // ===========================================
 
-  //CRUD tabel trainer
-  // Menambahkan trainer
-  Future<void> insertTrainer(Trainer newTrainer, {
-  required String name,
-  required String phoneNumber,
-  Uint8List? photo,
-  required double price,
-}) async {
-  final db = await database;
-  await db.insert('trainer', {
-    'name': name,
-    'phone_number': phoneNumber,
-    'photo': photo,
-    'price': price,
-  });
-  print('Trainer inserted successfully');
-}
-//Mengambil Semua Trainer
-Future<List<Map<String, dynamic>>> getAllTrainers() async {
-  final db = await database;
-  return await db.query('trainer');
-}
-
-//update
-Future<void> updateTrainer({
-  required int id,
-  required String name,
-  required String phoneNumber,
-  Uint8List? photo,
-  required double price,
-}) async {
-  final db = await database;
-  await db.update(
-    'trainer',
-    {
+  // CRUD tabel trainer
+  Future<void> insertTrainer({
+    required String name,
+    required String phoneNumber,
+    Uint8List? photo,
+    required double price,
+  }) async {
+    final db = await database;
+    await db.insert('trainer', {
       'name': name,
       'phone_number': phoneNumber,
       'photo': photo,
       'price': price,
-    },
-    where: 'id = ?',
-    whereArgs: [id],
-  );
-}
-//Menghapus Trainer
-Future<void> deleteTrainer(int id) async {
-  final db = await database;
-  await db.delete('trainer', where: 'id = ?', whereArgs: [id]);
-}
-// ===========================================
+    });
+    print('Trainer inserted successfully');
+  }
 
+  // Mengambil Semua Trainer
+  Future<List<Map<String, dynamic>>> getAllTrainers() async {
+    final db = await database;
+    return await db.query('trainer');
+  }
+
+  // Update Trainer
+  Future<void> updateTrainer({
+    required int id,
+    required String name,
+    required String phoneNumber,
+    Uint8List? photo,
+    required double price,
+  }) async {
+    final db = await database;
+    await db.update(
+      'trainer',
+      {
+        'name': name,
+        'phone_number': phoneNumber,
+        'photo': photo,
+        'price': price,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Menghapus Trainer
+  Future<void> deleteTrainer(int id) async {
+    final db = await database;
+    await db.delete('trainer', where: 'id = ?', whereArgs: [id]);
+  }
 
   // Menutup koneksi database
   Future<void> close() async {
