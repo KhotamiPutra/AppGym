@@ -42,7 +42,7 @@ class _AppWrapperState extends State<AppWrapper> {
     );
     return [
       Home(appBar: myAppBar, paddingTop: paddingTop),
-      Addmember(
+      MemberPage(
         appBar: myAppBar,
         paddingTop: paddingTop,
       ),

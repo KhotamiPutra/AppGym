@@ -69,7 +69,7 @@ class DBHelper {
     required String startDate,
     required String endDate,
     required int trainerId,
-    required String isActive, // sekarang menggunakan TEXT 'aktif' atau 'nonaktif'
+    required String isActive,
     required double price,
   }) async {
     final db = await database;
@@ -77,16 +77,17 @@ class DBHelper {
       'photo': photo,
       'name': name,
       'phone_number': phoneNumber,
-      'is_pre_registration': isPreRegistration, // 0 atau 1
-      'is_tni': isTni, // 0 atau 1
+      'is_pre_registration': isPreRegistration,
+      'is_tni': isTni,
       'start_date': startDate,
       'end_date': endDate,
       'trainer_id': trainerId,
-      'is_active': isActive, // 'aktif' atau 'nonaktif'
+      'is_active': isActive,
       'price': price,
     });
     print('Member inserted successfully');
   }
+
 
   // Mengambil Semua Member
   Future<List<Map<String, dynamic>>> getAllMembers() async {
