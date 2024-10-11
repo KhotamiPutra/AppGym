@@ -1,349 +1,369 @@
-import 'package:flutter/material.dart';
 import 'dart:io';
+
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:appgym/Database/database_helper.dart';
+
+class Member {
+  final int id;
+  final String? photo;
+  final String name;
+  final String phoneNumber;
+  final int? isPreRegis;
+  final int? isTNI;
+  final String startDate;
+  final String endDate;
+  final int? trainerId;
+  final String isActive;
+  final int price;
+
+  Member(
+      {required this.id,
+      required this.photo,
+      required this.name,
+      required this.phoneNumber,
+      required this.isPreRegis,
+      required this.isTNI,
+      required this.startDate,
+      required this.endDate,
+      required this.trainerId,
+      required this.isActive,
+      required this.price});
+}
 
 class MemberPage extends StatefulWidget {
   final AppBar appBar;
   final double paddingTop;
-
   const MemberPage({super.key, required this.appBar, required this.paddingTop});
+
   @override
-  _MemberPageState createState() => _MemberPageState();
+  State<MemberPage> createState() => _MemberPageState();
 }
 
 class _MemberPageState extends State<MemberPage> {
-  final DBHelper _dbHelper = DBHelper();
+  final List<Member> _member = [];
+  int? _currentMemberId;
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneNumberController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _PreController = TextEditingController();
+  final TextEditingController _tniDiscController = TextEditingController();
   final TextEditingController _startDateController = TextEditingController();
   final TextEditingController _endDateController = TextEditingController();
+  final TextEditingController _trainerIdController = TextEditingController();
+  final TextEditingController _isActiveController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
-  int? _trainerId;
   String? _photoPath;
-  bool _isPreRegistration = false;
-  bool _isTNI = false;
-  bool _isActive = true;
-  int? _currentMemberId;
-  List<Map<String, dynamic>> _trainers = [];
-  List<Map<String, dynamic>> _members = [];
-
+  final ImagePicker _picker = ImagePicker();
   @override
-  void initState() {
-    super.initState();
-    _loadTrainers();
-    _loadMembers();
-  }
-
-  Future<void> _loadTrainers() async {
-    final trainers = await _dbHelper.getAllTrainers();
-    setState(() {
-      _trainers = trainers;
-    });
-  }
-
-  Future<void> _loadMembers() async {
-    final members = await _dbHelper.getAllMembers();
-    setState(() {
-      _members = members;
-    });
-  }
-
-  Future<void> _showAddMemberModal({Map<String, dynamic>? member}) async {
-    if (member != null) {
-      _currentMemberId = member['id'];
-      _nameController.text = member['name'];
-      _phoneNumberController.text = member['phone_number'];
-      _startDateController.text = member['start_date'];
-      _endDateController.text = member['end_date'];
-      _priceController.text = member['price'].toString();
-      _trainerId = member['trainer_id'];
-      _isPreRegistration = member['is_pre_registration'] == 1;
-      _isTNI = member['is_tni'] == 1;
-      _isActive = member['is_active'] == 'aktif';
-      _photoPath = member['photo'];
-    } else {
-      _currentMemberId = null;
-      _nameController.clear();
-      _phoneNumberController.clear();
-      _startDateController.clear();
-      _endDateController.clear();
-      _priceController.clear();
-      _trainerId = null;
-      _isPreRegistration = false;
-      _isTNI = false;
-      _isActive = true;
-      _photoPath = null;
-    }
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => Padding(
-        padding: MediaQuery.of(context).viewInsets,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Stack(
           children: [
-            _buildPhotoPicker(),
-            _buildTextField(_nameController, 'Nama'),
-            _buildTextField(_phoneNumberController, 'No. Telpon'),
-            _buildDatePicker(_startDateController, 'Tanggal Mulai'),
-            _buildDatePicker(_endDateController, 'Tanggal Akhir'),
-            _buildTextField(_priceController, 'Harga'),
-            _buildTrainerDropdown(),
-            _buildCheckbox(
-                'Pra-Pendaftaran',
-                _isPreRegistration,
-                (value) =>
-                    setState(() => _isPreRegistration = _isPreRegistration)),
-            _buildCheckbox(
-                'TNI', _isTNI, (value) => setState(() => _isTNI = _isTNI)),
-            _buildCheckbox('Aktif', _isActive,
-                (value) => setState(() => _isActive = _isActive)),
-            _buildSaveButton(),
+            Column(
+              children: [
+                Expanded(
+                    child: ListView.builder(
+                        itemCount: _member.length,
+                        itemBuilder: (context, index) {
+                          final member = _member[index];
+                          return Card(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: const BorderSide(
+                                    color: Colors.black, width: 0.5)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 24,
+                                        backgroundImage: member.photo != null
+                                            ? FileImage(File(member.photo!))
+                                            : null,
+                                        child: member.photo == null
+                                            ? const Icon(Icons.person)
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                          child: Text(
+                                        member.name,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      )),
+                                      PopupMenuButton<String>(
+                                        onSelected: (value) {
+                                          switch (value) {
+                                            case 'Edit':
+                                              _ShowEditMemberModal(member);
+                                              break;
+                                            case 'Delete':
+                                              _confirmDeleteMember(member.id);
+                                              break;
+                                          }
+                                        },
+                                        itemBuilder: (context) => [
+                                          const PopupMenuItem(
+                                              value: 'Edit',
+                                              child: Text('Edut')),
+                                          const PopupMenuItem(
+                                              value: 'Delete',
+                                              child: Text('Delete'))
+                                        ],
+                                      )
+                                    ],
+                                  ),
+                                  Divider(
+                                    color: Colors.black,
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            "Status",
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          Text(member.isActive),
+                                        ],
+                                      )
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }))
+              ],
+            ),
+            Positioned(
+              right: 10,
+              bottom: 10,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10))),
+                onPressed: _ShowAddMemberModal,
+                child: const Text(
+                  '+',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            )
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPhotoPicker() {
-    return GestureDetector(
-      onTap: () async {
-        final picker = ImagePicker();
-        final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-        if (pickedFile != null) {
-          setState(() {
-            _photoPath = pickedFile.path;
-          });
-        }
-      },
-      child: CircleAvatar(
-        radius: 50,
-        backgroundImage:
-            _photoPath != null ? FileImage(File(_photoPath!)) : null,
-        child: _photoPath == null ? Icon(Icons.camera_alt) : null,
-      ),
-    );
+  void _ShowAddMemberModal() {
+    _currentMemberId = null;
+    _nameController.clear();
+    _phoneController.clear();
+    _PreController.clear();
+    _tniDiscController.clear();
+    _startDateController.clear();
+    _endDateController.clear();
+    _trainerIdController.clear();
+    _isActiveController.clear();
+    _priceController.clear();
+    _photoPath = null;
+
+    showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return _buildMemberForm();
+        });
   }
 
-  Widget _buildTextField(TextEditingController controller, String label) {
+  void _ShowEditMemberModal(Member member) {
+    _currentMemberId = null;
+    _nameController.clear();
+    _phoneController.clear();
+    _PreController.clear();
+    _tniDiscController.clear();
+    _startDateController.clear();
+    _endDateController.clear();
+    _trainerIdController.clear();
+    _isActiveController.clear();
+    _priceController.clear();
+    _photoPath = null;
+
+    showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return _buildMemberForm();
+        });
+  }
+
+  Widget _buildMemberForm() {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(labelText: label),
-      ),
-    );
-  }
-
-  Widget _buildDatePicker(TextEditingController controller, String label) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextField(
-        controller: controller,
-        readOnly: true,
-        decoration: InputDecoration(labelText: label),
-        onTap: () async {
-          final selectedDate = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2100),
-          );
-          if (selectedDate != null) {
-            setState(() {
-              controller.text = selectedDate.toIso8601String().substring(0, 10);
-            });
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _buildTrainerDropdown() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: DropdownButton<int>(
-        isExpanded: true,
-        value: _trainerId,
-        hint: Text('Pilih Trainer'),
-        items: _trainers
-            .map((trainer) => DropdownMenuItem<int>(
-                  value: trainer['id'],
-                  child: Text(trainer['name']),
-                ))
-            .toList(),
-        onChanged: (value) {
-          setState(() {
-            _trainerId = value;
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _buildCheckbox(String label, bool value, Function(bool?) onChanged) {
-    return CheckboxListTile(
-      title: Text(label),
-      value: value,
-      onChanged: onChanged,
-    );
-  }
-
-  Widget _buildSaveButton() {
-    return ElevatedButton(
-      onPressed: _saveMember,
-      child: Text(_currentMemberId != null ? 'Update' : 'Simpan'),
-    );
-  }
-
-  Future<void> _saveMember() async {
-    final name = _nameController.text;
-    final phoneNumber = _phoneNumberController.text;
-    final startDate = _startDateController.text;
-    final endDate = _endDateController.text;
-    final price = double.tryParse(_priceController.text) ?? 0.0;
-
-    if (_currentMemberId == null) {
-      // Insert member
-      await _dbHelper.insertMember(
-        photo: _photoPath != null ? File(_photoPath!).readAsBytesSync() : null,
-        name: name,
-        phoneNumber: phoneNumber,
-        startDate: startDate,
-        endDate: endDate,
-        trainerId: _trainerId!,
-        isActive: _isActive ? 'aktif' : 'nonaktif',
-        price: price,
-        isPreRegistration: _isPreRegistration ? 1 : 0,
-        isTni: _isTNI ? 1 : 0,
-      );
-    } else {
-      // Update member
-      await _dbHelper.updateMember(
-        id: _currentMemberId!,
-        photo: _photoPath != null ? File(_photoPath!).readAsBytesSync() : null,
-        name: name,
-        phoneNumber: phoneNumber,
-        startDate: startDate,
-        endDate: endDate,
-        trainerId: _trainerId!,
-        isActive: _isActive ? 'aktif' : 'nonaktif',
-        price: price,
-        isPreRegistration: _isPreRegistration ? 1 : 0,
-        isTni: _isTNI ? 1 : 0,
-      );
-    }
-
-    Navigator.of(context).pop();
-    _loadMembers();
-  }
-
-  void _deleteMember(int memberId) {
-    _dbHelper.deleteMember(memberId);
-    _loadMembers();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Member berhasil dihapus')),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Data Member'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () => _showAddMemberModal(),
-          ),
+      padding: const EdgeInsets.all(16.0),
+      child: ListView(
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: _pickImage,
+                child: CircleAvatar(
+                    radius: 40,
+                    backgroundImage: _photoPath != null
+                        ? FileImage(File(_photoPath!))
+                        : null,
+                    child: _photoPath == null
+                        ? const Icon(Icons.camera_alt, size: 40)
+                        : null),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Nama Member'),
+              ),
+              TextField(
+                controller: _phoneController,
+                decoration: const InputDecoration(labelText: 'Nomor Telepon'),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                  onPressed: _saveMember,
+                  child:
+                      Text(_currentMemberId == null ? 'Tambah' : 'Perbarui')),
+            ],
+          )
         ],
       ),
-      body: ListView.builder(
-        itemCount: _members.length,
-        itemBuilder: (context, index) {
-          final member = _members[index];
-          return Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-              side: BorderSide(color: Colors.black, width: 0.5),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 30,
-                          backgroundImage: member['photo'] != null
-                              ? MemoryImage(member['photo'])
-                              : null,
-                          child: member['photo'] == null
-                              ? Icon(Icons.person)
-                              : null,
-                        ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            member['name'],
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                        PopupMenuButton<String>(
-                          onSelected: (value) {
-                            switch (value) {
-                              case 'Edit':
-                                _showAddMemberModal(member: member);
-                                break;
-                              case 'Delete':
-                                _deleteMember(member['id']);
-                                break;
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'Edit',
-                              child: Text('Edit'),
-                            ),
-                            PopupMenuItem(
-                              value: 'Delete',
-                              child: Text('Delete'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(member['phone_number']),
-                      Text('Rp${member['price'].toStringAsFixed(2)}'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
     );
+  }
+
+  Future<void> _pickImage() async {
+    final PickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (PickedFile != null) {
+      setState(() {
+        _photoPath = PickedFile.path;
+      });
+    }
+  }
+
+ void _saveMember() {
+  final name = _nameController.text;
+  final phoneNumber = _phoneController.text;
+  final preReg = int.tryParse(_PreController.text); // Konversi ke int
+  final tnidisc = int.tryParse(_tniDiscController.text); // Konversi ke int
+  final startdate = _startDateController.text;
+  final enddate = _endDateController.text;
+  final trainerId = int.tryParse(_trainerIdController.text); // Konversi ke int
+  final active = _isActiveController.text;
+  final price = int.tryParse(_priceController.text); // Konversi ke int
+
+  // Validasi untuk memastikan semua nilai sudah benar
+  if (name.isEmpty ||
+      phoneNumber.isEmpty ||
+      preReg == null || // Pastikan preReg bukan null
+      tnidisc == null || // Pastikan tnidisc bukan null
+      startdate.isEmpty ||
+      enddate.isEmpty ||
+      trainerId == null || // Pastikan trainerId bukan null
+      active.isEmpty ||
+      price == null) { // Pastikan price bukan null
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Masukan Data yang valid')));
+    return;
+  }
+
+  if (_currentMemberId == null) {
+    final newMember = Member(
+        id: _member.length,
+        photo: _photoPath,
+        name: name,
+        phoneNumber: phoneNumber,
+        isPreRegis: preReg,
+        isTNI: tnidisc,
+        startDate: startdate,
+        endDate: enddate,
+        trainerId: trainerId,
+        isActive: active,
+        price: price);
+    setState(() {
+      _member.add(newMember);
+    });
+  } else {
+    // Update existing member
+    final index =
+        _member.indexWhere((member) => member.id == _currentMemberId);
+    if (index != -1) {
+      setState(() {
+        _member[index] = Member(
+            id: _currentMemberId!,
+            photo: _photoPath,
+            name: name,
+            phoneNumber: phoneNumber,
+            isPreRegis: preReg,
+            isTNI: tnidisc,
+            startDate: startdate,
+            endDate: enddate,
+            trainerId: trainerId,
+            isActive: active,
+            price: price);
+      });
+    }
+  }
+  Navigator.of(context).pop();
+}
+
+
+  void _deleteMember(int memberId) {
+    setState(() {
+      _member.removeWhere((member) => member.id == memberId);
+    });
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Memver Berhasil dihapus')));
+  }
+
+  //konfirmasi hapus
+  void _confirmDeleteMember(int memberId) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Konfirmasi Hapus'),
+            content: const Text('Apakah anda yakin ingin menghapus?'),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Tidak')),
+              TextButton(
+                  onPressed: () {
+                    _deleteMember(memberId);
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Ya'))
+            ],
+          );
+        });
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _phoneNumberController.dispose();
+    _phoneController.dispose();
+    _PreController.dispose();
+    _tniDiscController.dispose();
     _startDateController.dispose();
     _endDateController.dispose();
+    _trainerIdController.dispose();
+    _isActiveController.dispose();
     _priceController.dispose();
-    super.dispose();
+    super.dispose(); // Pastikan untuk memanggil super.dispose()
   }
 }

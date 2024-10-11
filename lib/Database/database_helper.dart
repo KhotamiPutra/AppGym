@@ -7,49 +7,65 @@ class DBHelper {
 
   // Inisialisasi database
   Future<void> initDB() async {
-    String path = join(await getDatabasesPath(), 'gym.db');
-    _database = await openDatabase(
-      path,
-      onCreate: (db, version) {
-        // Buat tabel member
-        db.execute('''CREATE TABLE members (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          photo BLOB,
-          name TEXT,
-          phone_number TEXT,
-          is_pre_registration INTEGER, 
-          is_tni INTEGER, 
-          start_date TEXT,
-          end_date TEXT,
-          trainer_id INTEGER,
-          is_active TEXT NOT NULL,
-          price REAL,
-          FOREIGN KEY(trainer_id) REFERENCES trainer(id)
-        )''');
+  String path = join(await getDatabasesPath(), 'gym.db');
+  _database = await openDatabase(
+    path,
+    onCreate: (db, version) {
+      // Buat tabel member
+      db.execute('''CREATE TABLE members (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        photo BLOB,
+        name TEXT,
+        phone_number TEXT,
+        is_pre_registration INTEGER, 
+        is_tni INTEGER, 
+        start_date TEXT,
+        end_date TEXT,
+        trainer_id INTEGER,
+        is_active TEXT NOT NULL,
+        price REAL,
+        FOREIGN KEY(trainer_id) REFERENCES trainer(id)
+      )''');
 
-        // Buat tabel harga
-        db.execute('''CREATE TABLE prices (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          member_price REAL,
-          pre_registration_price REAL,
-          tni_discount REAL
-        )''');
+      // Buat tabel harga
+      db.execute('''CREATE TABLE prices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        member_price REAL,
+        pre_registration_price REAL,
+        tni_discount REAL
+      )''');
 
-        // Buat tabel trainer
-        db.execute('''CREATE TABLE trainer (
+      // Buat tabel trainer
+      db.execute('''CREATE TABLE trainer (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        photo BLOB,
+        name TEXT,
+        phone_number TEXT,
+        price REAL
+      )''');
+    },
+    onUpgrade: (db, oldVersion, newVersion) async {
+      if (oldVersion < 3) {
+        // Tambahkan kolom tni_discount jika belum ada
+        await db.execute('ALTER TABLE prices ADD COLUMN tni_discount REAL');
+      }
+      if (oldVersion < 4) {
+        // Buat tabel trainer jika belum ada
+        await db.execute('''CREATE TABLE IF NOT EXISTS trainer (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           photo BLOB,
           name TEXT,
           phone_number TEXT,
           price REAL
         )''');
-      },
-      onOpen: (db) {
-        db.execute('PRAGMA foreign_keys = ON;');
-      },
-      version: 2,
-    );
-  }
+      }
+    },
+    onOpen: (db) {
+      db.execute('PRAGMA foreign_keys = ON;');
+    },
+    version: 4, // Naikkan versi database
+  );
+}
 
   // Pastikan database sudah diinisialisasi sebelum digunakan
   Future<Database> get database async {

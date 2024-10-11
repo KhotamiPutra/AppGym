@@ -91,7 +91,7 @@ class _TrainerPageState extends State<TrainerPage> {
                                             _showEditTrainerModal(trainer);
                                             break;
                                           case 'Delete':
-                                            _deleteTrainer(trainer.id);
+                                            _confirmDeleteTrainer(trainer.id);
                                             break;
                                         }
                                       },
@@ -106,12 +106,22 @@ class _TrainerPageState extends State<TrainerPage> {
                                   ],
                                 ),
                               ),
+                              Divider(
+                                color: Colors.black,
+                              ),
+                              SizedBox(
+                                height: 10,
+                              ),
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(trainer.phoneNumber),
-                                  Text('Rp${trainer.price.toStringAsFixed(2)}'),
+                                  Text(
+                                    'Rp${trainer.price.toStringAsFixed(2)}',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
                                 ],
                               ),
                             ],
@@ -121,15 +131,22 @@ class _TrainerPageState extends State<TrainerPage> {
                     },
                   ),
                 ),
-                Positioned(
-                  right: 10,
-                  bottom: 10,
-                  child: ElevatedButton(
-                    onPressed: _showAddTrainerModal,
-                    child: const Text('Tambah Trainer'),
-                  ),
-                ),
               ],
+            ),
+            Positioned(
+              right: 10,
+              bottom: 10,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10))),
+                onPressed: _showAddTrainerModal,
+                child: const Text(
+                  '+',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
             ),
           ],
         ),
@@ -272,6 +289,34 @@ class _TrainerPageState extends State<TrainerPage> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Trainer berhasil dihapus')),
+    );
+  }
+
+//konfirmasi hapus
+  void _confirmDeleteTrainer(int trainerId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Konfirmasi Hapus'),
+          content: const Text('Apakah Anda yakin ingin menghapus trainer ini?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Tutup dialog
+              },
+              child: const Text('Tidak'),
+            ),
+            TextButton(
+              onPressed: () {
+                _deleteTrainer(trainerId); // Panggil fungsi hapus
+                Navigator.of(context).pop(); // Tutup dialog
+              },
+              child: const Text('Ya'),
+            ),
+          ],
+        );
+      },
     );
   }
 
