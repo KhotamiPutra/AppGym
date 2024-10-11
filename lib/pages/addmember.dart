@@ -44,7 +44,7 @@ class _MemberPageState extends State<MemberPage> {
   int? _currentMemberId;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _PreController = TextEditingController();
+  final TextEditingController _preController = TextEditingController();
   final TextEditingController _tniDiscController = TextEditingController();
   final TextEditingController _startDateController = TextEditingController();
   final TextEditingController _endDateController = TextEditingController();
@@ -168,7 +168,7 @@ class _MemberPageState extends State<MemberPage> {
     _currentMemberId = null;
     _nameController.clear();
     _phoneController.clear();
-    _PreController.clear();
+    _preController.clear();
     _tniDiscController.clear();
     _startDateController.clear();
     _endDateController.clear();
@@ -188,7 +188,7 @@ class _MemberPageState extends State<MemberPage> {
     _currentMemberId = null;
     _nameController.clear();
     _phoneController.clear();
-    _PreController.clear();
+    _preController.clear();
     _tniDiscController.clear();
     _startDateController.clear();
     _endDateController.clear();
@@ -256,7 +256,7 @@ class _MemberPageState extends State<MemberPage> {
  void _saveMember() {
   final name = _nameController.text;
   final phoneNumber = _phoneController.text;
-  final preReg = int.tryParse(_PreController.text); // Konversi ke int
+  final preReg = int.tryParse(_preController.text); // Konversi ke int
   final tnidisc = int.tryParse(_tniDiscController.text); // Konversi ke int
   final startdate = _startDateController.text;
   final enddate = _endDateController.text;
@@ -357,7 +357,7 @@ class _MemberPageState extends State<MemberPage> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
-    _PreController.dispose();
+    _preController.dispose();
     _tniDiscController.dispose();
     _startDateController.dispose();
     _endDateController.dispose();
