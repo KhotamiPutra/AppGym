@@ -116,17 +116,17 @@ class _MemberPageState extends State<MemberPage> {
                                       )
                                     ],
                                   ),
-                                  Divider(
+                                  const Divider(
                                     color: Colors.black,
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     height: 10,
                                   ),
                                   Column(
                                     children: [
                                       Row(
                                         children: [
-                                          Text(
+                                          const Text(
                                             "Status",
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold),

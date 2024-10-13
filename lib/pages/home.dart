@@ -1,7 +1,6 @@
 import 'package:appgym/pages/layouts/Responsif_Home_HP.dart';
 import 'package:appgym/pages/layouts/Responsif_Home_Tablet.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class Home extends StatefulWidget {
@@ -28,7 +27,7 @@ class _HomeState extends State<Home> {
     const double activeMembers = 75; // Anggota aktif
 
     // Menghitung Persentase
-    final double inactiveMembers = totalMembers - activeMembers;
+    const double inactiveMembers = totalMembers - activeMembers;
 
     final Map<String, double> dataMap = {
       "Active": activeMembers,

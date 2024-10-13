@@ -17,22 +17,22 @@ class _VisitorPageState extends State<VisitorPage> {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
-                TextField(
+                const TextField(
                   decoration: InputDecoration(labelText: 'Nama'),
                 ),
-                SizedBox(height: 10),
-                TextField(
+                const SizedBox(height: 10),
+                const TextField(
                   readOnly: true,
                   decoration: InputDecoration(hintText: 'Harga'),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () {
                     // Handle the save action here
                   },
                   child: const Text('Simpan'),
                 ),
-                Row(
+                const Row(
                   children: [
                     Icon(Icons.history),
                     SizedBox(

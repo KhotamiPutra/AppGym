@@ -106,10 +106,10 @@ class _TrainerPageState extends State<TrainerPage> {
                                   ],
                                 ),
                               ),
-                              Divider(
+                              const Divider(
                                 color: Colors.black,
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 10,
                               ),
                               Row(
@@ -120,7 +120,7 @@ class _TrainerPageState extends State<TrainerPage> {
                                   Text(
                                     'Rp${trainer.price.toStringAsFixed(2)}',
                                     style:
-                                        TextStyle(fontWeight: FontWeight.bold),
+                                        const TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),

@@ -2,6 +2,8 @@ import 'package:appgym/Database/database_helper.dart';
 import 'package:flutter/material.dart';
 
 class PriceSettingPage extends StatefulWidget {
+  const PriceSettingPage({super.key});
+
   @override
   _PriceSettingPageState createState() => _PriceSettingPageState();
 }
@@ -43,7 +45,7 @@ class _PriceSettingPageState extends State<PriceSettingPage> {
 
     if (memberPrice == null || preRegistrationPrice == null || tniDiscount == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Masukkan nilai yang valid')),
+        const SnackBar(content: Text('Masukkan nilai yang valid')),
       );
       return;
     }
@@ -58,7 +60,7 @@ class _PriceSettingPageState extends State<PriceSettingPage> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Harga berhasil diperbarui')),
+        const SnackBar(content: Text('Harga berhasil diperbarui')),
       );
     } else {
       // Tambahkan harga baru
@@ -69,7 +71,7 @@ class _PriceSettingPageState extends State<PriceSettingPage> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Harga berhasil disimpan')),
+        const SnackBar(content: Text('Harga berhasil disimpan')),
       );
     }
 
@@ -94,7 +96,7 @@ class _PriceSettingPageState extends State<PriceSettingPage> {
           });
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Harga berhasil dihapus')),
+            const SnackBar(content: Text('Harga berhasil dihapus')),
           );
         },
       );
@@ -119,13 +121,13 @@ class _PriceSettingPageState extends State<PriceSettingPage> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Batal'),
+              child: const Text('Batal'),
               onPressed: () {
                 Navigator.of(context).pop(); // Tutup dialog tanpa melakukan aksi
               },
             ),
             TextButton(
-              child: Text('Konfirmasi'),
+              child: const Text('Konfirmasi'),
               onPressed: () {
                 onConfirm(); // Panggil fungsi konfirmasi
                 Navigator.of(context).pop(); // Tutup dialog setelah konfirmasi
@@ -141,7 +143,7 @@ class _PriceSettingPageState extends State<PriceSettingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Pengaturan Harga'),
+        title: const Text('Pengaturan Harga'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -150,27 +152,27 @@ class _PriceSettingPageState extends State<PriceSettingPage> {
             TextField(
               controller: _memberPriceController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Harga Member',
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
               controller: _preRegistrationPriceController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Harga Pra-Pendaftar',
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
               controller: _tniDiscountController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Diskon TNI',
               ),
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -183,7 +185,7 @@ class _PriceSettingPageState extends State<PriceSettingPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                   ),
-                  child: Text(
+                  child: const Text(
                     'Hapus',
                     style: TextStyle(color: Colors.white),
                   ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:pie_chart/pie_chart.dart';
 
 //Total Member Tablet
@@ -229,7 +228,7 @@ class TotalPengeluaranTablet extends StatelessWidget {
                   onPressed: () {
                     showModalBottomSheet(
                       context: context,
-                      builder: (context) => AddExpenseModal(),
+                      builder: (context) => const AddExpenseModal(),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -237,7 +236,7 @@ class TotalPengeluaranTablet extends StatelessWidget {
                     shape: const CircleBorder(),
                     padding: const EdgeInsets.all(12),
                   ),
-                  child: Icon(Icons.add, color: Colors.white),
+                  child: const Icon(Icons.add, color: Colors.white),
                 ),
               ],
             ),
