@@ -2,7 +2,6 @@ import 'package:appgym/pages/addmember.dart';
 import 'package:appgym/pages/datatrainer.dart';
 import 'package:appgym/pages/home.dart';
 import 'package:appgym/pages/setting.dart';
-import 'package:appgym/pages/visitor.dart';
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar_2/persistent_tab_view.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -47,7 +46,6 @@ class _AppWrapperState extends State<AppWrapper> {
         paddingTop: paddingTop,
       ),
       TrainerPage(appBar: myAppBar, paddingTop: paddingTop),
-      const VisitorPage(),
     ];
   }
 
@@ -68,12 +66,6 @@ class _AppWrapperState extends State<AppWrapper> {
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.fitness_center_outlined),
         title: "Data Trainer",
-        activeColorPrimary: const Color.fromARGB(255, 253, 62, 67),
-        inactiveColorPrimary: Colors.grey,
-      ),
-      PersistentBottomNavBarItem(
-        icon: const Icon(Icons.people_alt_rounded),
-        title: "Visit",
         activeColorPrimary: const Color.fromARGB(255, 253, 62, 67),
         inactiveColorPrimary: Colors.grey,
       ),

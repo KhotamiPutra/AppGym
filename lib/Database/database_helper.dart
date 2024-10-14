@@ -84,7 +84,7 @@ class DBHelper {
     required int isTni, 
     required String startDate,
     required String endDate,
-    required int trainerId,
+    int? trainerId,
     required String isActive,
     required double price,
   }) async {
@@ -121,7 +121,7 @@ class DBHelper {
     required int isTni,
     required String startDate,
     required String endDate,
-    required int trainerId,
+    int? trainerId,
     required String isActive,
     required double price,
   }) async {

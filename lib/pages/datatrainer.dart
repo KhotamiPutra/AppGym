@@ -1,12 +1,13 @@
+import 'package:appgym/Database/database_helper.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
 
 class Trainer {
   final int id;
   final String name;
   final String phoneNumber;
-  final String? photo;
+  final Uint8List? photo; // Ubah tipe data foto menjadi Uint8List?
   final double price;
 
   Trainer({
@@ -16,16 +17,36 @@ class Trainer {
     this.photo,
     required this.price,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'phone_number': phoneNumber,
+      'photo': photo,
+      'price': price,
+    };
+  }
+
+  static Trainer fromMap(Map<String, dynamic> map) {
+    return Trainer(
+      id: map['id'],
+      name: map['name'],
+      phoneNumber: map['phone_number'],
+      photo: map['photo'], // Ini sekarang akan menjadi Uint8List? atau null
+      price: map['price'],
+    );
+  }
 }
 
 class TrainerPage extends StatefulWidget {
   final AppBar appBar;
   final double paddingTop;
 
-  const TrainerPage(
-      {super.key, required this.appBar, required this.paddingTop});
+  const TrainerPage({Key? key, required this.appBar, required this.paddingTop}) : super(key: key);
+
   @override
-  _TrainerPageState createState() => _TrainerPageState();
+  State<TrainerPage> createState() => _TrainerPageState();
 }
 
 class _TrainerPageState extends State<TrainerPage> {
@@ -34,9 +55,76 @@ class _TrainerPageState extends State<TrainerPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
-  String? _photoPath;
-
+  Uint8List? _photoBytes; // Ubah _photoPath menjadi _photoBytes
   final ImagePicker _picker = ImagePicker();
+  final DBHelper _dbHelper = DBHelper();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTrainers();
+  }
+
+  Future<void> _loadTrainers() async {
+    final trainersData = await _dbHelper.getAllTrainers();
+    setState(() {
+      _trainers.clear();
+      _trainers.addAll(trainersData.map((data) => Trainer.fromMap(data)));
+    });
+  }
+
+  Future<void> _saveTrainer() async {
+    final name = _nameController.text;
+    final phoneNumber = _phoneNumberController.text;
+    final price = double.tryParse(_priceController.text);
+
+    if (name.isEmpty || phoneNumber.isEmpty || price == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Masukkan data yang valid')),
+      );
+      return;
+    }
+
+    if (_currentTrainerId == null) {
+      // Tambah Trainer Baru
+      await _dbHelper.insertTrainer(
+        name: name,
+        phoneNumber: phoneNumber,
+        photo: _photoBytes,
+        price: price,
+      );
+    } else {
+      // Update Trainer
+      await _dbHelper.updateTrainer(
+        id: _currentTrainerId!,
+        name: name,
+        phoneNumber: phoneNumber,
+        photo: _photoBytes,
+        price: price,
+      );
+    }
+
+    await _loadTrainers(); // Muat ulang data dari database
+    Navigator.of(context).pop(); // Tutup modal
+  }
+
+  Future<void> _deleteTrainer(int trainerId) async {
+    await _dbHelper.deleteTrainer(trainerId);
+    await _loadTrainers(); // Muat ulang data dari database
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Trainer berhasil dihapus')),
+    );
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _photoBytes = bytes;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +143,7 @@ class _TrainerPageState extends State<TrainerPage> {
                       return Card(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
-                          side:
-                              const BorderSide(color: Colors.black, width: 0.5),
+                          side: const BorderSide(color: Colors.black, width: 0.5),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -69,7 +156,7 @@ class _TrainerPageState extends State<TrainerPage> {
                                     CircleAvatar(
                                       radius: 24,
                                       backgroundImage: trainer.photo != null
-                                          ? FileImage(File(trainer.photo!))
+                                          ? MemoryImage(trainer.photo!)
                                           : null,
                                       child: trainer.photo == null
                                           ? const Icon(Icons.person)
@@ -96,31 +183,22 @@ class _TrainerPageState extends State<TrainerPage> {
                                         }
                                       },
                                       itemBuilder: (context) => [
-                                        const PopupMenuItem(
-                                            value: 'Edit', child: Text('Edit')),
-                                        const PopupMenuItem(
-                                            value: 'Delete',
-                                            child: Text('Delete')),
+                                        const PopupMenuItem(value: 'Edit', child: Text('Edit')),
+                                        const PopupMenuItem(value: 'Delete', child: Text('Delete')),
                                       ],
                                     ),
                                   ],
                                 ),
                               ),
-                              const Divider(
-                                color: Colors.black,
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
+                              const Divider(color: Colors.black),
+                              const SizedBox(height: 10),
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(trainer.phoneNumber),
                                   Text(
                                     'Rp${trainer.price.toStringAsFixed(2)}',
-                                    style:
-                                        const TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),
@@ -138,9 +216,9 @@ class _TrainerPageState extends State<TrainerPage> {
               bottom: 10,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10))),
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
                 onPressed: _showAddTrainerModal,
                 child: const Text(
                   '+',
@@ -155,11 +233,11 @@ class _TrainerPageState extends State<TrainerPage> {
   }
 
   void _showAddTrainerModal() {
-    _currentTrainerId = null; // Reset ID
+    _currentTrainerId = null;
     _nameController.clear();
     _phoneNumberController.clear();
     _priceController.clear();
-    _photoPath = null;
+    _photoBytes = null;
 
     showModalBottomSheet(
       context: context,
@@ -174,7 +252,7 @@ class _TrainerPageState extends State<TrainerPage> {
     _nameController.text = trainer.name;
     _phoneNumberController.text = trainer.phoneNumber;
     _priceController.text = trainer.price.toString();
-    _photoPath = trainer.photo;
+    _photoBytes = trainer.photo;
 
     showModalBottomSheet(
       context: context,
@@ -186,113 +264,46 @@ class _TrainerPageState extends State<TrainerPage> {
 
   Widget _buildTrainerForm() {
     return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: _pickImage, // Panggil fungsi untuk memilih gambar
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundImage: _photoPath != null
-                        ? FileImage(File(_photoPath!))
-                        : null,
-                    child: _photoPath == null
-                        ? const Icon(Icons.camera_alt, size: 40)
-                        : null,
-                  ),
+      padding: const EdgeInsets.all(16.0),
+      child: ListView(
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: _pickImage,
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundImage: _photoBytes != null ? MemoryImage(_photoBytes!) : null,
+                  child: _photoBytes == null ? const Icon(Icons.camera_alt, size: 40) : null,
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Nama Trainer'),
-                ),
-                TextField(
-                  controller: _phoneNumberController,
-                  decoration: const InputDecoration(labelText: 'Nomor Telepon'),
-                ),
-                TextField(
-                  controller: _priceController,
-                  decoration: const InputDecoration(labelText: 'Harga'),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _saveTrainer,
-                  child:
-                      Text(_currentTrainerId == null ? 'Tambah' : 'Perbarui'),
-                ),
-              ],
-            ),
-          ],
-        ));
-  }
-
-  Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _photoPath = pickedFile.path; // Simpan path gambar yang dipilih
-      });
-    }
-  }
-
-  void _saveTrainer() {
-    final name = _nameController.text;
-    final phoneNumber = _phoneNumberController.text;
-    final price = double.tryParse(_priceController.text);
-
-    if (name.isEmpty || phoneNumber.isEmpty || price == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Masukkan data yang valid')),
-      );
-      return;
-    }
-
-    if (_currentTrainerId == null) {
-      // Tambah Trainer Baru
-      final newTrainer = Trainer(
-        id: _trainers.length + 1,
-        name: name,
-        phoneNumber: phoneNumber,
-        photo: _photoPath,
-        price: price,
-      );
-      setState(() {
-        _trainers.add(newTrainer);
-      });
-    } else {
-      // Update Trainer
-      final index =
-          _trainers.indexWhere((trainer) => trainer.id == _currentTrainerId);
-      if (index != -1) {
-        setState(() {
-          _trainers[index] = Trainer(
-            id: _currentTrainerId!,
-            name: name,
-            phoneNumber: phoneNumber,
-            photo: _photoPath,
-            price: price,
-          );
-        });
-      }
-    }
-
-    Navigator.of(context).pop(); // Tutup modal
-  }
-
-  void _deleteTrainer(int trainerId) {
-    setState(() {
-      _trainers.removeWhere((trainer) => trainer.id == trainerId);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Trainer berhasil dihapus')),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Nama Trainer'),
+              ),
+              TextField(
+                controller: _phoneNumberController,
+                decoration: const InputDecoration(labelText: 'Nomor Telepon'),
+              ),
+              TextField(
+                controller: _priceController,
+                decoration: const InputDecoration(labelText: 'Harga'),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _saveTrainer,
+                child: Text(_currentTrainerId == null ? 'Tambah' : 'Perbarui'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-//konfirmasi hapus
   void _confirmDeleteTrainer(int trainerId) {
     showDialog(
       context: context,
@@ -303,14 +314,14 @@ class _TrainerPageState extends State<TrainerPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Tutup dialog
+                Navigator.of(context).pop();
               },
               child: const Text('Tidak'),
             ),
             TextButton(
               onPressed: () {
-                _deleteTrainer(trainerId); // Panggil fungsi hapus
-                Navigator.of(context).pop(); // Tutup dialog
+                _deleteTrainer(trainerId);
+                Navigator.of(context).pop();
               },
               child: const Text('Ya'),
             ),
