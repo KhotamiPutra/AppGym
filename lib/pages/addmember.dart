@@ -133,7 +133,7 @@ class _MemberPageState extends State<MemberPage> {
 
     if (_isTNI) {
       double discount = _prices!['tni_discount'] ?? 0.0;
-      basePrice -= (basePrice * discount);
+      basePrice -= discount;
     }
 
     if (_selectedTrainerId != null) {
@@ -164,7 +164,8 @@ class _MemberPageState extends State<MemberPage> {
                       return Card(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
-                          side: const BorderSide(color: Colors.black, width: 0.5),
+                          side:
+                              const BorderSide(color: Colors.black, width: 0.5),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -185,7 +186,8 @@ class _MemberPageState extends State<MemberPage> {
                                   Expanded(
                                     child: Text(
                                       member.name,
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold),
                                     ),
                                   ),
                                   PopupMenuButton<String>(
@@ -200,8 +202,11 @@ class _MemberPageState extends State<MemberPage> {
                                       }
                                     },
                                     itemBuilder: (context) => [
-                                      const PopupMenuItem(value: 'Edit', child: Text('Edit')),
-                                      const PopupMenuItem(value: 'Delete', child: Text('Delete')),
+                                      const PopupMenuItem(
+                                          value: 'Edit', child: Text('Edit')),
+                                      const PopupMenuItem(
+                                          value: 'Delete',
+                                          child: Text('Delete')),
                                     ],
                                   ),
                                 ],
@@ -211,18 +216,23 @@ class _MemberPageState extends State<MemberPage> {
                               Column(
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text("Status: ${member.isActive}"),
-                                      Text("Harga: Rp${member.price.toStringAsFixed(2)}"),
+                                      Text(
+                                          "Harga: Rp${member.price.toStringAsFixed(2)}"),
                                     ],
                                   ),
                                   const SizedBox(height: 5),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text("Pra-Pendaftar: ${member.isPreRegis ? 'Ya' : 'Tidak'}"),
-                                      Text("TNI: ${member.isTNI ? 'Ya' : 'Tidak'}"),
+                                      Text(
+                                          "Pra-Pendaftar: ${member.isPreRegis ? 'Ya' : 'Tidak'}"),
+                                      Text(
+                                          "TNI: ${member.isTNI ? 'Ya' : 'Tidak'}"),
                                     ],
                                   ),
                                 ],
@@ -242,7 +252,8 @@ class _MemberPageState extends State<MemberPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: _showAddMemberModal,
                 child: const Text(
@@ -316,8 +327,11 @@ class _MemberPageState extends State<MemberPage> {
                 onTap: _pickImage,
                 child: CircleAvatar(
                   radius: 40,
-                  backgroundImage: _photoPath != null ? FileImage(File(_photoPath!)) : null,
-                  child: _photoPath == null ? const Icon(Icons.camera_alt, size: 40) : null,
+                  backgroundImage:
+                      _photoPath != null ? FileImage(File(_photoPath!)) : null,
+                  child: _photoPath == null
+                      ? const Icon(Icons.camera_alt, size: 40)
+                      : null,
                 ),
               ),
               const SizedBox(height: 16),
@@ -353,18 +367,25 @@ class _MemberPageState extends State<MemberPage> {
               ),
               DropdownButtonFormField<int>(
                 value: _selectedTrainerId,
-                items: _trainers.map((trainer) {
-                  return DropdownMenuItem<int>(
-                    value: trainer['id'],
-                    child: Text(trainer['name']),
-                  );
-                }).toList(),
+                items: [
+                  const DropdownMenuItem<int>(
+                    value: null, // Bisa gunakan 'null' untuk tidak ada pilihan
+                    child: Text('Tidak ada'),
+                  ),
+                  ..._trainers.map((trainer) {
+                    return DropdownMenuItem<int>(
+                      value: trainer['id'],
+                      child: Text(trainer['name']),
+                    );
+                  }).toList(),
+                ],
                 onChanged: (value) {
                   setState(() {
                     _selectedTrainerId = value;
                   });
                 },
-                decoration: const InputDecoration(labelText: 'Trainer (Opsional)'),
+                decoration:
+                    const InputDecoration(labelText: 'Trainer (Opsional)'),
               ),
               TextField(
                 controller: _startDateController,
@@ -378,14 +399,16 @@ class _MemberPageState extends State<MemberPage> {
                   );
                   if (pickedDate != null) {
                     setState(() {
-                      _startDateController.text = pickedDate.toIso8601String().split('T')[0];
+                      _startDateController.text =
+                          pickedDate.toIso8601String().split('T')[0];
                     });
                   }
                 },
               ),
               TextField(
                 controller: _endDateController,
-                decoration: const InputDecoration(labelText: 'Tanggal Berakhir'),
+                decoration:
+                    const InputDecoration(labelText: 'Tanggal Berakhir'),
                 onTap: () async {
                   DateTime? pickedDate = await showDatePicker(
                     context: context,
@@ -395,7 +418,8 @@ class _MemberPageState extends State<MemberPage> {
                   );
                   if (pickedDate != null) {
                     setState(() {
-                      _endDateController.text = pickedDate.toIso8601String().split('T')[0];
+                      _endDateController.text =
+                          pickedDate.toIso8601String().split('T')[0];
                     });
                   }
                 },
@@ -438,14 +462,18 @@ class _MemberPageState extends State<MemberPage> {
     final isActive = _isActiveController.text;
     final price = _calculatePrice();
 
-    if (name.isEmpty || phoneNumber.isEmpty || startDate.isEmpty || endDate.isEmpty || isActive.isEmpty) {
+    if (name.isEmpty ||
+        phoneNumber.isEmpty ||
+        startDate.isEmpty ||
+        endDate.isEmpty ||
+        isActive.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Mohon isi semua field yang diperlukan')),
       );
       return;
     }
 
-   Uint8List? photoBytes;
+    Uint8List? photoBytes;
     if (_photoPath != null) {
       final file = File(_photoPath!);
       photoBytes = await file.readAsBytes();
