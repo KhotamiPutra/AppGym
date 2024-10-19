@@ -124,6 +124,12 @@ class _MemberPageState extends State<MemberPage> {
     }
   }
 
+  Future<void> _refreshData() async {
+    await _loadMembers();
+    await _loadTrainers();
+    await _loadPrices();
+  }
+
   double _calculatePrice() {
     if (_prices == null) return 0.0;
 
@@ -157,6 +163,8 @@ class _MemberPageState extends State<MemberPage> {
             Column(
               children: [
                 Expanded(
+                    child: RefreshIndicator(
+                  onRefresh: _refreshData,
                   child: ListView.builder(
                     itemCount: _members.length,
                     itemBuilder: (context, index) {
@@ -243,7 +251,7 @@ class _MemberPageState extends State<MemberPage> {
                       );
                     },
                   ),
-                ),
+                )),
               ],
             ),
             Positioned(
@@ -472,7 +480,14 @@ class _MemberPageState extends State<MemberPage> {
       );
       return;
     }
-
+    if (!RegExp(r'^\d{10,}$').hasMatch(phoneNumber)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content:
+                Text('Nomor telepon harus berupa angka dan minimal 10 digit')),
+      );
+      return;
+    }
     Uint8List? photoBytes;
     if (_photoPath != null) {
       final file = File(_photoPath!);
@@ -493,6 +508,9 @@ class _MemberPageState extends State<MemberPage> {
         isActive: isActive,
         price: price,
       );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Member berhasil ditambahkan')),
+      );
     } else {
       // Update existing member
       await _dbHelper.updateMember(
@@ -507,6 +525,9 @@ class _MemberPageState extends State<MemberPage> {
         trainerId: _selectedTrainerId!,
         isActive: isActive,
         price: price,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Member berhasil diperbarui')),
       );
     }
 

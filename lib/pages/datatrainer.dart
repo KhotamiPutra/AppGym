@@ -43,7 +43,8 @@ class TrainerPage extends StatefulWidget {
   final AppBar appBar;
   final double paddingTop;
 
-  const TrainerPage({Key? key, required this.appBar, required this.paddingTop}) : super(key: key);
+  const TrainerPage({Key? key, required this.appBar, required this.paddingTop})
+      : super(key: key);
 
   @override
   State<TrainerPage> createState() => _TrainerPageState();
@@ -73,6 +74,10 @@ class _TrainerPageState extends State<TrainerPage> {
     });
   }
 
+  Future<void> _refreshData() async {
+    await _loadTrainers();
+  }
+
   Future<void> _saveTrainer() async {
     final name = _nameController.text;
     final phoneNumber = _phoneNumberController.text;
@@ -84,7 +89,21 @@ class _TrainerPageState extends State<TrainerPage> {
       );
       return;
     }
+    if (!RegExp(r'^\d{10,}$').hasMatch(phoneNumber)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content:
+                Text('Nomor telepon harus berupa angka dan minimal 10 digit')),
+      );
+      return;
+    }
 
+    if (price <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harga harus berupa angka positif')),
+      );
+      return;
+    }
     if (_currentTrainerId == null) {
       // Tambah Trainer Baru
       await _dbHelper.insertTrainer(
@@ -92,6 +111,9 @@ class _TrainerPageState extends State<TrainerPage> {
         phoneNumber: phoneNumber,
         photo: _photoBytes,
         price: price,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Trainer berhasil ditambahkan')),
       );
     } else {
       // Update Trainer
@@ -101,6 +123,9 @@ class _TrainerPageState extends State<TrainerPage> {
         phoneNumber: phoneNumber,
         photo: _photoBytes,
         price: price,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Trainer berhasil diperbarui')),
       );
     }
 
@@ -136,6 +161,8 @@ class _TrainerPageState extends State<TrainerPage> {
             Column(
               children: [
                 Expanded(
+                    child: RefreshIndicator(
+                  onRefresh: _refreshData,
                   child: ListView.builder(
                     itemCount: _trainers.length,
                     itemBuilder: (context, index) {
@@ -143,7 +170,8 @@ class _TrainerPageState extends State<TrainerPage> {
                       return Card(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
-                          side: const BorderSide(color: Colors.black, width: 0.5),
+                          side:
+                              const BorderSide(color: Colors.black, width: 0.5),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -183,8 +211,11 @@ class _TrainerPageState extends State<TrainerPage> {
                                         }
                                       },
                                       itemBuilder: (context) => [
-                                        const PopupMenuItem(value: 'Edit', child: Text('Edit')),
-                                        const PopupMenuItem(value: 'Delete', child: Text('Delete')),
+                                        const PopupMenuItem(
+                                            value: 'Edit', child: Text('Edit')),
+                                        const PopupMenuItem(
+                                            value: 'Delete',
+                                            child: Text('Delete')),
                                       ],
                                     ),
                                   ],
@@ -193,12 +224,14 @@ class _TrainerPageState extends State<TrainerPage> {
                               const Divider(color: Colors.black),
                               const SizedBox(height: 10),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(trainer.phoneNumber),
                                   Text(
                                     'Rp${trainer.price.toStringAsFixed(2)}',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),
@@ -208,7 +241,7 @@ class _TrainerPageState extends State<TrainerPage> {
                       );
                     },
                   ),
-                ),
+                )),
               ],
             ),
             Positioned(
@@ -217,7 +250,8 @@ class _TrainerPageState extends State<TrainerPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: _showAddTrainerModal,
                 child: const Text(
@@ -274,8 +308,11 @@ class _TrainerPageState extends State<TrainerPage> {
                 onTap: _pickImage,
                 child: CircleAvatar(
                   radius: 40,
-                  backgroundImage: _photoBytes != null ? MemoryImage(_photoBytes!) : null,
-                  child: _photoBytes == null ? const Icon(Icons.camera_alt, size: 40) : null,
+                  backgroundImage:
+                      _photoBytes != null ? MemoryImage(_photoBytes!) : null,
+                  child: _photoBytes == null
+                      ? const Icon(Icons.camera_alt, size: 40)
+                      : null,
                 ),
               ),
               const SizedBox(height: 16),
