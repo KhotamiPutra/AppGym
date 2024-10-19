@@ -142,18 +142,18 @@ class _TrainerPageState extends State<TrainerPage> {
     );
   }
 
-Future<void> _pickImage() async {
-  final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-  if (pickedFile != null) {
-    // Kompres gambar
-    final compressedBytes = await compressImage(pickedFile.path);
-    if (compressedBytes != null) {
-      setState(() {
-        _photoBytes = compressedBytes;
-      });
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      // Kompres gambar
+      final compressedBytes = await compressImage(pickedFile.path);
+      if (compressedBytes != null) {
+        setState(() {
+          _photoBytes = compressedBytes;
+        });
+      }
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -346,13 +346,20 @@ Future<void> _pickImage() async {
     );
   }
 
-  void _confirmDeleteTrainer(int trainerId) {
+  void _confirmDeleteTrainer(int trainerId) async {
+    // Cek apakah trainer memiliki member
+    bool hasMembers = await _dbHelper.trainerHasMember(trainerId);
+
+    if (!context.mounted) return;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Konfirmasi Hapus'),
-          content: const Text('Apakah Anda yakin ingin menghapus trainer ini?'),
+          content: Text(hasMembers
+              ? 'Trainer ini masih memiliki member yang terkait. Jika dihapus, member tersebut tidak akan memiliki trainer. Apakah Anda yakin ingin melanjutkan?'
+              : 'Apakah Anda yakin ingin menghapus trainer ini?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -361,9 +368,23 @@ Future<void> _pickImage() async {
               child: const Text('Tidak'),
             ),
             TextButton(
-              onPressed: () {
-                _deleteTrainer(trainerId);
-                Navigator.of(context).pop();
+              onPressed: () async {
+                try {
+                  await _deleteTrainer(trainerId);
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Trainer berhasil dihapus')),
+                  );
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content:
+                          Text('Gagal menghapus trainer. Silakan coba lagi.'),
+                    ),
+                  );
+                }
               },
               child: const Text('Ya'),
             ),

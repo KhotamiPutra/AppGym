@@ -446,9 +446,10 @@ class _MemberPageState extends State<MemberPage> {
                     const InputDecoration(labelText: 'Tanggal Berakhir'),
                 // enabled: false,
               ),
-              DropdownButtonFormField(
-                value: _isActiveController.text.isEmpty
-                    ? 'Aktif'
+              DropdownButtonFormField<String>(
+                value: _isActiveController.text.isEmpty ||
+                        !_statusOption.contains(_isActiveController.text)
+                    ? _statusOption[0]
                     : _isActiveController.text,
                 items: _statusOption.map((String status) {
                   return DropdownMenuItem<String>(
@@ -458,7 +459,7 @@ class _MemberPageState extends State<MemberPage> {
                 }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
-                    _isActiveController.text = newValue ?? 'Aktif';
+                    _isActiveController.text = newValue ?? _statusOption[0];
                   });
                 },
                 decoration: const InputDecoration(labelText: 'Status'),

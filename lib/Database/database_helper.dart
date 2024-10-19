@@ -7,12 +7,12 @@ class DBHelper {
 
   // Inisialisasi database
   Future<void> initDB() async {
-  String path = join(await getDatabasesPath(), 'gym.db');
-  _database = await openDatabase(
-    path,
-    onCreate: (db, version) {
-      // Buat tabel member
-      db.execute('''CREATE TABLE members (
+    String path = join(await getDatabasesPath(), 'gym.db');
+    _database = await openDatabase(
+      path,
+      onCreate: (db, version) {
+        // Buat tabel member
+        db.execute('''CREATE TABLE members (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         photo BLOB,
         name TEXT,
@@ -27,45 +27,45 @@ class DBHelper {
         FOREIGN KEY(trainer_id) REFERENCES trainer(id)
       )''');
 
-      // Buat tabel harga
-      db.execute('''CREATE TABLE prices (
+        // Buat tabel harga
+        db.execute('''CREATE TABLE prices (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         member_price REAL,
         pre_registration_price REAL,
         tni_discount REAL
       )''');
 
-      // Buat tabel trainer
-      db.execute('''CREATE TABLE trainer (
+        // Buat tabel trainer
+        db.execute('''CREATE TABLE trainer (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         photo BLOB,
         name TEXT,
         phone_number TEXT,
         price REAL
       )''');
-    },
-    onUpgrade: (db, oldVersion, newVersion) async {
-      if (oldVersion < 3) {
-        // Tambahkan kolom tni_discount jika belum ada
-        await db.execute('ALTER TABLE prices ADD COLUMN tni_discount REAL');
-      }
-      if (oldVersion < 4) {
-        // Buat tabel trainer jika belum ada
-        await db.execute('''CREATE TABLE IF NOT EXISTS trainer (
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 3) {
+          // Tambahkan kolom tni_discount jika belum ada
+          await db.execute('ALTER TABLE prices ADD COLUMN tni_discount REAL');
+        }
+        if (oldVersion < 4) {
+          // Buat tabel trainer jika belum ada
+          await db.execute('''CREATE TABLE IF NOT EXISTS trainer (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           photo BLOB,
           name TEXT,
           phone_number TEXT,
           price REAL
         )''');
-      }
-    },
-    onOpen: (db) {
-      db.execute('PRAGMA foreign_keys = ON;');
-    },
-    version: 4, // Naikkan versi database
-  );
-}
+        }
+      },
+      onOpen: (db) {
+        db.execute('PRAGMA foreign_keys = ON;');
+      },
+      version: 4, // Naikkan versi database
+    );
+  }
 
   // Pastikan database sudah diinisialisasi sebelum digunakan
   Future<Database> get database async {
@@ -80,8 +80,8 @@ class DBHelper {
     Uint8List? photo,
     required String name,
     required String phoneNumber,
-    required int isPreRegistration, 
-    required int isTni, 
+    required int isPreRegistration,
+    required int isTni,
     required String startDate,
     required String endDate,
     int? trainerId,
@@ -103,7 +103,6 @@ class DBHelper {
     });
     print('Member inserted successfully');
   }
-
 
   // Mengambil Semua Member
   Future<List<Map<String, dynamic>>> getAllMembers() async {
@@ -152,7 +151,7 @@ class DBHelper {
   }
 
   // ===========================================
-  
+
   // CRUD tabel price
   Future<void> insertPrice({
     required double memberPrice,
@@ -225,6 +224,26 @@ class DBHelper {
     return await db.query('trainer');
   }
 
+  Future<bool> trainerHasMember(int trainerId) async {
+    final db = await database;
+    final result = await db.query(
+      'members',
+      where: 'trainer_id = ?',
+      whereArgs: [trainerId],
+    );
+    return result.isNotEmpty;
+  }
+
+  Future<void> removeTrainerFromMembers(int trainerId) async {
+    final db = await database;
+    await db.update(
+      'members',
+      {'trainer_id': null},
+      where: 'trainer_id = ?',
+      whereArgs: [trainerId],
+    );
+  }
+
   // Update Trainer
   Future<void> updateTrainer({
     required int id,
@@ -248,9 +267,21 @@ class DBHelper {
   }
 
   // Menghapus Trainer
-  Future<void> deleteTrainer(int id) async {
+  Future<void> deleteTrainer(int trainerId) async {
     final db = await database;
-    await db.delete('trainer', where: 'id = ?', whereArgs: [id]);
+    await db.transaction((txn) async {
+      await txn.update(
+        'members',
+        {'trainer_id': null},
+        where: 'trainer_id = ?',
+        whereArgs: [trainerId],
+      );
+      await txn.delete(
+        'trainer',
+        where: 'id = ?',
+        whereArgs: [trainerId],
+      );
+    });
   }
 
   // Menutup koneksi database
