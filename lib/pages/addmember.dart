@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:appgym/Database/database_helper.dart';
+import 'package:appgym/ImageCompressionHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -456,9 +457,13 @@ class _MemberPageState extends State<MemberPage> {
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() {
-        _photoPath = pickedFile.path;
-      });
+      // Kompres gambar
+      final compressedBytes = await compressImage(pickedFile.path);
+      if (compressedBytes != null) {
+        setState(() {
+          _photoPath = pickedFile.path;
+        });
+      }
     }
   }
 
@@ -490,8 +495,7 @@ class _MemberPageState extends State<MemberPage> {
     }
     Uint8List? photoBytes;
     if (_photoPath != null) {
-      final file = File(_photoPath!);
-      photoBytes = await file.readAsBytes();
+      photoBytes = await compressImage(_photoPath!);
     }
 
     if (_currentMemberId == null) {

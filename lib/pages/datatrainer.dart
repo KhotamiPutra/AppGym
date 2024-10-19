@@ -1,4 +1,5 @@
 import 'package:appgym/Database/database_helper.dart';
+import 'package:appgym/ImageCompressionHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
@@ -141,15 +142,18 @@ class _TrainerPageState extends State<TrainerPage> {
     );
   }
 
-  Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      final bytes = await pickedFile.readAsBytes();
+Future<void> _pickImage() async {
+  final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+  if (pickedFile != null) {
+    // Kompres gambar
+    final compressedBytes = await compressImage(pickedFile.path);
+    if (compressedBytes != null) {
       setState(() {
-        _photoBytes = bytes;
+        _photoBytes = compressedBytes;
       });
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
