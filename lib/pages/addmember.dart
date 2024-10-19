@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:appgym/Database/database_helper.dart';
@@ -88,7 +87,7 @@ class _MemberPageState extends State<MemberPage> {
   bool _isPreRegis = false;
   bool _isTNI = false;
   int? _selectedTrainerId;
-  String? _photoPath;
+  Uint8List? _photoBytes;
   final ImagePicker _picker = ImagePicker();
   final DBHelper _dbHelper = DBHelper();
 
@@ -287,7 +286,7 @@ class _MemberPageState extends State<MemberPage> {
     _isPreRegis = false;
     _isTNI = false;
     _selectedTrainerId = null;
-    _photoPath = null;
+    _photoBytes = null;
 
     showModalBottomSheet(
       context: context,
@@ -308,7 +307,7 @@ class _MemberPageState extends State<MemberPage> {
     _isPreRegis = member.isPreRegis;
     _isTNI = member.isTNI;
     _selectedTrainerId = member.trainerId;
-    _photoPath = null; // You might want to load the existing photo here
+    _photoBytes = member.photo;
 
     showModalBottomSheet(
       context: context,
@@ -337,8 +336,8 @@ class _MemberPageState extends State<MemberPage> {
                 child: CircleAvatar(
                   radius: 40,
                   backgroundImage:
-                      _photoPath != null ? FileImage(File(_photoPath!)) : null,
-                  child: _photoPath == null
+                      _photoBytes != null ? MemoryImage(_photoBytes!  ) : null,
+                  child: _photoBytes == null
                       ? const Icon(Icons.camera_alt, size: 40)
                       : null,
                 ),
@@ -351,6 +350,7 @@ class _MemberPageState extends State<MemberPage> {
               TextField(
                 controller: _phoneController,
                 decoration: const InputDecoration(labelText: 'Nomor Telepon'),
+                keyboardType: TextInputType.phone,
               ),
               Row(
                 children: [
@@ -461,7 +461,7 @@ class _MemberPageState extends State<MemberPage> {
       final compressedBytes = await compressImage(pickedFile.path);
       if (compressedBytes != null) {
         setState(() {
-          _photoPath = pickedFile.path;
+          _photoBytes = compressedBytes; // Simpan langsung sebagai bytes
         });
       }
     }
@@ -493,15 +493,12 @@ class _MemberPageState extends State<MemberPage> {
       );
       return;
     }
-    Uint8List? photoBytes;
-    if (_photoPath != null) {
-      photoBytes = await compressImage(_photoPath!);
-    }
+   
 
     if (_currentMemberId == null) {
       // Add new member
       await _dbHelper.insertMember(
-        photo: photoBytes,
+        photo: _photoBytes,
         name: name,
         phoneNumber: phoneNumber,
         isPreRegistration: _isPreRegis ? 1 : 0,
@@ -519,7 +516,7 @@ class _MemberPageState extends State<MemberPage> {
       // Update existing member
       await _dbHelper.updateMember(
         id: _currentMemberId!,
-        photo: photoBytes,
+        photo: _photoBytes,
         name: name,
         phoneNumber: phoneNumber,
         isPreRegistration: _isPreRegis ? 1 : 0,

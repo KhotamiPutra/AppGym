@@ -327,6 +327,7 @@ Future<void> _pickImage() async {
               TextField(
                 controller: _phoneNumberController,
                 decoration: const InputDecoration(labelText: 'Nomor Telepon'),
+                keyboardType: TextInputType.phone,
               ),
               TextField(
                 controller: _priceController,
