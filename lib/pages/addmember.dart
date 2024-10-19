@@ -90,13 +90,36 @@ class _MemberPageState extends State<MemberPage> {
   Uint8List? _photoBytes;
   final ImagePicker _picker = ImagePicker();
   final DBHelper _dbHelper = DBHelper();
-
+  final List<String> _statusOption = ['Aktif', 'Tidak Aktif'];
   @override
   void initState() {
     super.initState();
     _loadMembers();
     _loadTrainers();
     _loadPrices();
+  }
+
+  // Tambahkan fungsi untuk mengatur tanggal akhir otomatis
+  void _setEndDate(String startDate) {
+    try {
+      final start = DateTime.parse(startDate);
+      final end = start.add(const Duration(days: 30)); // Menambah 30 hari
+      _endDateController.text = end.toIso8601String().split('T')[0];
+    } catch (e) {
+      print('Error setting end date: $e');
+    }
+  }
+
+  // Tambahkan fungsi untuk mengecek status aktif berdasarkan tanggal
+  String _checkActiveStatus(String endDate) {
+    try {
+      final end = DateTime.parse(endDate);
+      final now = DateTime.now();
+      return now.isAfter(end) ? 'Non-aktif' : 'Aktif';
+    } catch (e) {
+      print('Error checking active status: $e');
+      return 'Non-aktif';
+    }
   }
 
   Future<void> _loadMembers() async {
@@ -336,7 +359,7 @@ class _MemberPageState extends State<MemberPage> {
                 child: CircleAvatar(
                   radius: 40,
                   backgroundImage:
-                      _photoBytes != null ? MemoryImage(_photoBytes!  ) : null,
+                      _photoBytes != null ? MemoryImage(_photoBytes!) : null,
                   child: _photoBytes == null
                       ? const Icon(Icons.camera_alt, size: 40)
                       : null,
@@ -410,6 +433,9 @@ class _MemberPageState extends State<MemberPage> {
                     setState(() {
                       _startDateController.text =
                           pickedDate.toIso8601String().split('T')[0];
+                      _setEndDate(_startDateController.text);
+                      _isActiveController.text =
+                          _checkActiveStatus(_endDateController.text);
                     });
                   }
                 },
@@ -418,24 +444,24 @@ class _MemberPageState extends State<MemberPage> {
                 controller: _endDateController,
                 decoration:
                     const InputDecoration(labelText: 'Tanggal Berakhir'),
-                onTap: () async {
-                  DateTime? pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2101),
-                  );
-                  if (pickedDate != null) {
-                    setState(() {
-                      _endDateController.text =
-                          pickedDate.toIso8601String().split('T')[0];
-                    });
-                  }
-                },
+                // enabled: false,
               ),
-              TextField(
-                controller: _isActiveController,
-                decoration: const InputDecoration(labelText: 'Status Aktif'),
+              DropdownButtonFormField(
+                value: _isActiveController.text.isEmpty
+                    ? 'Aktif'
+                    : _isActiveController.text,
+                items: _statusOption.map((String status) {
+                  return DropdownMenuItem<String>(
+                    value: status,
+                    child: Text(status),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _isActiveController.text = newValue ?? 'Aktif';
+                  });
+                },
+                decoration: const InputDecoration(labelText: 'Status'),
               ),
               const SizedBox(height: 16),
               Text(
@@ -493,7 +519,6 @@ class _MemberPageState extends State<MemberPage> {
       );
       return;
     }
-   
 
     if (_currentMemberId == null) {
       // Add new member
@@ -505,7 +530,7 @@ class _MemberPageState extends State<MemberPage> {
         isTni: _isTNI ? 1 : 0,
         startDate: startDate,
         endDate: endDate,
-        trainerId: _selectedTrainerId!,
+        trainerId: _selectedTrainerId,
         isActive: isActive,
         price: price,
       );
@@ -523,7 +548,7 @@ class _MemberPageState extends State<MemberPage> {
         isTni: _isTNI ? 1 : 0,
         startDate: startDate,
         endDate: endDate,
-        trainerId: _selectedTrainerId!,
+        trainerId: _selectedTrainerId,
         isActive: isActive,
         price: price,
       );
