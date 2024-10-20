@@ -60,11 +60,30 @@ class _TrainerPageState extends State<TrainerPage> {
   Uint8List? _photoBytes; // Ubah _photoPath menjadi _photoBytes
   final ImagePicker _picker = ImagePicker();
   final DBHelper _dbHelper = DBHelper();
+  final TextEditingController _searchController = TextEditingController();
+  List<Trainer> _filteredTrainers = [];
+
+  void _filterTrainers(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredTrainers = List.from(_trainers);
+      } else {
+        _filteredTrainers = _trainers
+            .where((trainer) =>
+                trainer.name.toLowerCase().contains(query.toLowerCase()) ||
+                trainer.phoneNumber.contains(query))
+            .toList();
+      }
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _loadTrainers();
+    _searchController.addListener(() {
+      _filterTrainers(_searchController.text);
+    });
   }
 
   Future<void> _loadTrainers() async {
@@ -72,6 +91,7 @@ class _TrainerPageState extends State<TrainerPage> {
     setState(() {
       _trainers.clear();
       _trainers.addAll(trainersData.map((data) => Trainer.fromMap(data)));
+      _filteredTrainers = List.from(_trainers);
     });
   }
 
@@ -164,13 +184,28 @@ class _TrainerPageState extends State<TrainerPage> {
           children: [
             Column(
               children: [
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Cari Trainer',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10)
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8
+                    )
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Expanded(
                     child: RefreshIndicator(
                   onRefresh: _refreshData,
                   child: ListView.builder(
-                    itemCount: _trainers.length,
+                    itemCount: _filteredTrainers.length,
                     itemBuilder: (context, index) {
-                      final trainer = _trainers[index];
+                      final trainer = _filteredTrainers[index];
                       return Card(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -399,6 +434,7 @@ class _TrainerPageState extends State<TrainerPage> {
     _nameController.dispose();
     _phoneNumberController.dispose();
     _priceController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 }

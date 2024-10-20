@@ -91,12 +91,32 @@ class _MemberPageState extends State<MemberPage> {
   final ImagePicker _picker = ImagePicker();
   final DBHelper _dbHelper = DBHelper();
   final List<String> _statusOption = ['Aktif', 'Tidak Aktif'];
+  final TextEditingController _searchController = TextEditingController();
+  List<Member> _filteredMembers = [];
+
+  void _filterMembers(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredMembers = List.from(_members);
+      } else {
+        _filteredMembers = _members
+            .where((member) =>
+                member.name.toLowerCase().contains(query.toLowerCase()) ||
+                member.phoneNumber.contains(query))
+            .toList();
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _loadMembers();
     _loadTrainers();
     _loadPrices();
+    _searchController.addListener((){
+      _filterMembers(_searchController.text);
+    });
   }
 
   // Tambahkan fungsi untuk mengatur tanggal akhir otomatis
@@ -111,14 +131,23 @@ class _MemberPageState extends State<MemberPage> {
   }
 
   // Tambahkan fungsi untuk mengecek status aktif berdasarkan tanggal
-  String _checkActiveStatus(String endDate) {
+  String _checkActiveStatus(String endDateStr) {
     try {
-      final end = DateTime.parse(endDate);
+      final endDateTime = DateTime.parse(endDateStr);
       final now = DateTime.now();
-      return now.isAfter(end) ? 'Non-aktif' : 'Aktif';
+
+      // Ubah datetime menjadi tanggal saja (tanpa waktu) untuk perbandingan yang akurat
+      final endDateOnly =
+          DateTime(endDateTime.year, endDateTime.month, endDateTime.day);
+      final todayDateOnly = DateTime(now.year, now.month, now.day);
+
+      // Cek apakah tanggal saat ini sama dengan atau setelah tanggal berakhir
+      return todayDateOnly.compareTo(endDateOnly) >= 0
+          ? 'Tidak Aktif'
+          : 'Aktif';
     } catch (e) {
       print('Error checking active status: $e');
-      return 'Non-aktif';
+      return 'Tidak Aktif';
     }
   }
 
@@ -127,6 +156,7 @@ class _MemberPageState extends State<MemberPage> {
     setState(() {
       _members.clear();
       _members.addAll(memberData.map((data) => Member.fromMap(data)));
+      _filteredMembers = List.from(_members);
     });
   }
 
@@ -185,13 +215,28 @@ class _MemberPageState extends State<MemberPage> {
           children: [
             Column(
               children: [
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Cari Member...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10)
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8
+                    )
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Expanded(
                     child: RefreshIndicator(
                   onRefresh: _refreshData,
                   child: ListView.builder(
-                    itemCount: _members.length,
+                    itemCount: _filteredMembers.length,
                     itemBuilder: (context, index) {
-                      final member = _members[index];
+                      final member = _filteredMembers[index];
                       return Card(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -215,10 +260,45 @@ class _MemberPageState extends State<MemberPage> {
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
-                                    child: Text(
-                                      member.name,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          member.name,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: member.isActive == 'Aktif'
+                                                ? Colors.green.shade100
+                                                : Colors.red.shade100,
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            border: Border.all(
+                                              color: member.isActive == 'Aktif'
+                                                  ? Colors.green
+                                                  : Colors.red,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            member.isActive,
+                                            style: TextStyle(
+                                              color: member.isActive == 'Aktif'
+                                                  ? Colors.green.shade800
+                                                  : Colors.red.shade800,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   PopupMenuButton<String>(
@@ -250,9 +330,10 @@ class _MemberPageState extends State<MemberPage> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text("Status: ${member.isActive}"),
                                       Text(
-                                          "Harga: Rp${member.price.toStringAsFixed(2)}"),
+                                        "Tanggal: ${member.startDate} s/d ${member.endDate}",
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 5),
@@ -261,9 +342,9 @@ class _MemberPageState extends State<MemberPage> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                          "Pra-Pendaftar: ${member.isPreRegis ? 'Ya' : 'Tidak'}"),
-                                      Text(
-                                          "TNI: ${member.isTNI ? 'Ya' : 'Tidak'}"),
+                                        "TNI: ${member.isTNI ? 'Ya' : 'Tidak'}",
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
                                     ],
                                   ),
                                 ],
@@ -604,6 +685,7 @@ class _MemberPageState extends State<MemberPage> {
     _startDateController.dispose();
     _endDateController.dispose();
     _isActiveController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 }
