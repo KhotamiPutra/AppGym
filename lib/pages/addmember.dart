@@ -114,9 +114,15 @@ class _MemberPageState extends State<MemberPage> {
     _loadMembers();
     _loadTrainers();
     _loadPrices();
-    _searchController.addListener((){
+    _searchController.addListener(() {
       _filterMembers(_searchController.text);
     });
+    _checkAndUpdateStatus();
+  }
+
+  Future<void> _checkAndUpdateStatus() async {
+    await _dbHelper.updateExpiredMemberships();
+    await _loadMembers(); // Reload data setelah update
   }
 
   // Tambahkan fungsi untuk mengatur tanggal akhir otomatis
@@ -133,18 +139,18 @@ class _MemberPageState extends State<MemberPage> {
   // Tambahkan fungsi untuk mengecek status aktif berdasarkan tanggal
   String _checkActiveStatus(String endDateStr) {
     try {
-      final endDateTime = DateTime.parse(endDateStr);
+      final endDate = DateTime.parse(endDateStr);
       final now = DateTime.now();
 
-      // Ubah datetime menjadi tanggal saja (tanpa waktu) untuk perbandingan yang akurat
-      final endDateOnly =
-          DateTime(endDateTime.year, endDateTime.month, endDateTime.day);
-      final todayDateOnly = DateTime(now.year, now.month, now.day);
+      // Ubah ke format tanggal saja (tanpa waktu)
+      final endDateOnly = DateTime(endDate.year, endDate.month, endDate.day);
+      final todayOnly = DateTime(now.year, now.month, now.day);
 
-      // Cek apakah tanggal saat ini sama dengan atau setelah tanggal berakhir
-      return todayDateOnly.compareTo(endDateOnly) >= 0
-          ? 'Tidak Aktif'
-          : 'Aktif';
+      // Jika tanggal hari ini sama dengan atau setelah tanggal berakhir
+      if (todayOnly.compareTo(endDateOnly) >= 0) {
+        return 'Tidak Aktif';
+      }
+      return 'Aktif';
     } catch (e) {
       print('Error checking active status: $e');
       return 'Tidak Aktif';
@@ -208,6 +214,9 @@ class _MemberPageState extends State<MemberPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isExpired =
+        (member) => _checkActiveStatus(member.endDate) == 'Tidak Aktif';
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -218,144 +227,147 @@ class _MemberPageState extends State<MemberPage> {
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Cari Member...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10)
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8
-                    )
-                  ),
+                      hintText: 'Cari Member...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8)),
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                    child: RefreshIndicator(
-                  onRefresh: _refreshData,
-                  child: ListView.builder(
-                    itemCount: _filteredMembers.length,
-                    itemBuilder: (context, index) {
-                      final member = _filteredMembers[index];
-                      return Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side:
-                              const BorderSide(color: Colors.black, width: 0.5),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 24,
-                                    backgroundImage: member.photo != null
-                                        ? MemoryImage(member.photo!)
-                                        : null,
-                                    child: member.photo == null
-                                        ? const Icon(Icons.person)
-                                        : null,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                  child: RefreshIndicator(
+                    onRefresh: _refreshData,
+                    child: ListView.builder(
+                      itemCount: _filteredMembers.length,
+                      itemBuilder: (context, index) {
+                        final member = _filteredMembers[index];
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(
+                              color: Colors.black,
+                              width: 0.5,
+                            ),
+                          ),
+                          color:
+                              isExpired(member) ? Colors.white : Colors.white,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 24,
+                                      backgroundImage: member.photo != null
+                                          ? MemoryImage(member.photo!)
+                                          : null,
+                                      child: member.photo == null
+                                          ? const Icon(Icons.person)
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            member.name,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: member.isActive == 'Aktif'
+                                                  ? Colors.green.shade100
+                                                  : Colors.red.shade100,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color:
+                                                    member.isActive == 'Aktif'
+                                                        ? Colors.green
+                                                        : Colors.red,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              member.isActive,
+                                              style: TextStyle(
+                                                color:
+                                                    member.isActive == 'Aktif'
+                                                        ? Colors.green.shade800
+                                                        : Colors.red.shade800,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuButton<String>(
+                                      onSelected: (value) {
+                                        switch (value) {
+                                          case 'Edit':
+                                            _showEditMemberModal(member);
+                                            break;
+                                          case 'Delete':
+                                            _confirmDeleteMember(member.id);
+                                            break;
+                                        }
+                                      },
+                                      itemBuilder: (context) => [
+                                        const PopupMenuItem(
+                                            value: 'Edit', child: Text('Edit')),
+                                        const PopupMenuItem(
+                                            value: 'Delete',
+                                            child: Text('Delete')),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const Divider(color: Colors.black),
+                                const SizedBox(height: 10),
+                                Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          member.name,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: member.isActive == 'Aktif'
-                                                ? Colors.green.shade100
-                                                : Colors.red.shade100,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            border: Border.all(
-                                              color: member.isActive == 'Aktif'
-                                                  ? Colors.green
-                                                  : Colors.red,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            member.isActive,
-                                            style: TextStyle(
-                                              color: member.isActive == 'Aktif'
-                                                  ? Colors.green.shade800
-                                                  : Colors.red.shade800,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
+                                          "Tanggal: ${member.startDate} s/d ${member.endDate}",
+                                          style: const TextStyle(fontSize: 12),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                  PopupMenuButton<String>(
-                                    onSelected: (value) {
-                                      switch (value) {
-                                        case 'Edit':
-                                          _showEditMemberModal(member);
-                                          break;
-                                        case 'Delete':
-                                          _confirmDeleteMember(member.id);
-                                          break;
-                                      }
-                                    },
-                                    itemBuilder: (context) => [
-                                      const PopupMenuItem(
-                                          value: 'Edit', child: Text('Edit')),
-                                      const PopupMenuItem(
-                                          value: 'Delete',
-                                          child: Text('Delete')),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              const Divider(color: Colors.black),
-                              const SizedBox(height: 10),
-                              Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        "Tanggal: ${member.startDate} s/d ${member.endDate}",
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        "TNI: ${member.isTNI ? 'Ya' : 'Tidak'}",
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
+                                    const SizedBox(height: 5),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          "TNI: ${member.isTNI ? 'Ya' : 'Tidak'}",
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                )),
+                ),
               ],
             ),
             Positioned(
@@ -580,7 +592,8 @@ class _MemberPageState extends State<MemberPage> {
     final phoneNumber = _phoneController.text;
     final startDate = _startDateController.text;
     final endDate = _endDateController.text;
-    final isActive = _isActiveController.text;
+    final isActive = _checkActiveStatus(endDate);
+    _isActiveController.text = isActive;
     final price = _calculatePrice();
 
     if (name.isEmpty ||

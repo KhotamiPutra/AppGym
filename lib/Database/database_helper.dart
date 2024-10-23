@@ -150,6 +150,31 @@ class DBHelper {
     await db.delete('members', where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<void> updateExpiredMemberships() async {
+    final db = await database;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day).toIso8601String();
+
+    await db.update(
+      'members',
+      {'is_active': 'Tidak Aktif'},
+      where: 'end_date < ? AND is_active = ?',
+      whereArgs: [today, 'Aktif'],
+    );
+  }
+
+   Future<List<Map<String, dynamic>>> getActiveMembersNearingExpiry() async {
+    final db = await database;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day).toIso8601String();
+
+    return await db.query(
+      'members',
+      where: 'end_date <= ? AND is_active = ?',
+      whereArgs: [today, 'Aktif'],
+    );
+  }
+
   // ===========================================
 
   // CRUD tabel price

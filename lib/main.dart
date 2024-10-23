@@ -1,3 +1,4 @@
+import 'package:appgym/Database/database_helper.dart';
 import 'package:appgym/pages/addmember.dart';
 import 'package:appgym/pages/datatrainer.dart';
 import 'package:appgym/pages/home.dart';
@@ -7,8 +8,47 @@ import 'package:persistent_bottom_nav_bar_2/persistent_tab_view.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, TargetPlatform, kIsWeb;
+import 'package:workmanager/workmanager.dart';
 
-void main() {
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    final dbHelper = DBHelper();
+    await dbHelper.initDB();
+    await dbHelper.updateExpiredMemberships();
+    return Future.value(true);
+  });
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Cek platform sebelum menginisialisasi Workmanager
+  if (!kIsWeb &&
+      defaultTargetPlatform != TargetPlatform.windows &&
+      defaultTargetPlatform != TargetPlatform.linux &&
+      defaultTargetPlatform != TargetPlatform.macOS) {
+    try {
+      await Workmanager().initialize(callbackDispatcher,
+          isInDebugMode: true // Set ke true untuk debugging
+          );
+
+      await Workmanager().registerPeriodicTask(
+        "1",
+        "checkMembershipStatus",
+        frequency: const Duration(days: 1),
+        initialDelay: const Duration(minutes: 1),
+        constraints: Constraints(
+          networkType: NetworkType.not_required,
+          requiresBatteryNotLow: true,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Workmanager initialization failed: $e');
+    }
+  }
+
+  // SQLite initialization untuk desktop platforms
   if (!kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.windows ||
           defaultTargetPlatform == TargetPlatform.linux ||
@@ -16,6 +56,7 @@ void main() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
+
   runApp(const AppWrapper());
 }
 
@@ -88,7 +129,8 @@ class _AppWrapperState extends State<AppWrapper> {
                 onPressed: () {
                   // Use navigatorKey to perform navigation
                   _navigatorKey.currentState?.push(
-                    MaterialPageRoute(builder: (context) => const PriceSettingPage()),
+                    MaterialPageRoute(
+                        builder: (context) => const PriceSettingPage()),
                   );
                 },
                 icon: const Icon(Icons.settings))
