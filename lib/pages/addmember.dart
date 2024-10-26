@@ -606,14 +606,22 @@ class _MemberPageState extends State<MemberPage> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      // Kompres gambar
-      final compressedBytes = await compressImage(pickedFile.path);
-      if (compressedBytes != null) {
-        setState(() {
-          _photoBytes = compressedBytes; // Simpan langsung sebagai bytes
-        });
+    final ImageSource? source = await _showImageSourceDialog(context);
+
+    if (source != null) {
+      final pickedFile = await _picker.pickImage(
+        source: source,
+        preferredCameraDevice:
+            CameraDevice.front, // Use front camera for profile photos
+      );
+      if (pickedFile != null) {
+        // Kompres gambar
+        final compressedBytes = await compressImage(pickedFile.path);
+        if (compressedBytes != null) {
+          setState(() {
+            _photoBytes = compressedBytes;
+          });
+        }
       }
     }
   }
@@ -746,6 +754,43 @@ class _MemberPageState extends State<MemberPage> {
           ),
         ],
       ),
+    );
+  }
+
+  // Helper function to show image source selector
+  Future<ImageSource?> _showImageSourceDialog(BuildContext context) async {
+    return await showDialog<ImageSource>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pilih Sumber Gambar'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                GestureDetector(
+                  child: const ListTile(
+                    leading: Icon(Icons.camera_alt),
+                    title: Text('Kamera'),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop(ImageSource.camera);
+                  },
+                ),
+                const Divider(),
+                GestureDetector(
+                  child: const ListTile(
+                    leading: Icon(Icons.photo_library),
+                    title: Text('Galeri'),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop(ImageSource.gallery);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

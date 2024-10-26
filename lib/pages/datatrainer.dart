@@ -162,15 +162,20 @@ class _TrainerPageState extends State<TrainerPage> {
     );
   }
 
+// Updated _pickImage function for TrainerPage
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      // Kompres gambar
-      final compressedBytes = await compressImage(pickedFile.path);
-      if (compressedBytes != null) {
-        setState(() {
-          _photoBytes = compressedBytes;
-        });
+    final ImageSource? source = await _showImageSourceDialog(context);
+
+    if (source != null) {
+      final pickedFile = await _picker.pickImage(source: source);
+      if (pickedFile != null) {
+        // Kompres gambar
+        final compressedBytes = await compressImage(pickedFile.path);
+        if (compressedBytes != null) {
+          setState(() {
+            _photoBytes = compressedBytes;
+          });
+        }
       }
     }
   }
@@ -187,16 +192,12 @@ class _TrainerPageState extends State<TrainerPage> {
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Cari Trainer',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10)
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8
-                    )
-                  ),
+                      hintText: 'Cari Trainer',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8)),
                 ),
                 const SizedBox(height: 16),
                 Expanded(
@@ -424,6 +425,43 @@ class _TrainerPageState extends State<TrainerPage> {
               child: const Text('Ya'),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  // Helper function to show image source selector
+  Future<ImageSource?> _showImageSourceDialog(BuildContext context) async {
+    return await showDialog<ImageSource>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pilih Sumber Gambar'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                GestureDetector(
+                  child: const ListTile(
+                    leading: Icon(Icons.camera_alt),
+                    title: Text('Kamera'),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop(ImageSource.camera);
+                  },
+                ),
+                const Divider(),
+                GestureDetector(
+                  child: const ListTile(
+                    leading: Icon(Icons.photo_library),
+                    title: Text('Galeri'),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop(ImageSource.gallery);
+                  },
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
