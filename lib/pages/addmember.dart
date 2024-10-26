@@ -2,8 +2,10 @@ import 'dart:typed_data';
 
 import 'package:appgym/Database/database_helper.dart';
 import 'package:appgym/ImageCompressionHelper.dart';
+import 'package:appgym/QRScanner.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class Member {
   final int id;
@@ -17,6 +19,7 @@ class Member {
   final int? trainerId;
   final String isActive;
   final double price;
+  final String? qrCode; // Tambahkan field QR code
 
   Member({
     required this.id,
@@ -30,6 +33,7 @@ class Member {
     this.trainerId,
     required this.isActive,
     required this.price,
+    this.qrCode,
   });
 
   Map<String, dynamic> toMap() {
@@ -45,6 +49,7 @@ class Member {
       'trainer_id': trainerId,
       'is_active': isActive,
       'price': price,
+      'qr_code': qrCode,
     };
   }
 
@@ -61,6 +66,7 @@ class Member {
       trainerId: map['trainer_id'],
       isActive: map['is_active'],
       price: map['price'],
+      qrCode: map['qr_code'],
     );
   }
 }
@@ -315,6 +321,9 @@ class _MemberPageState extends State<MemberPage> {
                                     PopupMenuButton<String>(
                                       onSelected: (value) {
                                         switch (value) {
+                                          case 'QR':
+                                            _showQRCode(member);
+                                            break;
                                           case 'Edit':
                                             _showEditMemberModal(member);
                                             break;
@@ -324,6 +333,9 @@ class _MemberPageState extends State<MemberPage> {
                                         }
                                       },
                                       itemBuilder: (context) => [
+                                        const PopupMenuItem(
+                                            value: 'QR',
+                                            child: Text('Show QR')),
                                         const PopupMenuItem(
                                             value: 'Edit', child: Text('Edit')),
                                         const PopupMenuItem(
@@ -386,6 +398,25 @@ class _MemberPageState extends State<MemberPage> {
                 ),
               ),
             ),
+            Positioned(
+              right: 70, // Sesuaikan posisi
+              bottom: 10,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => QRScanner()),
+                  );
+                },
+                child: Icon(Icons.qr_code_scanner, color: Colors.white),
+              ),
+            )
           ],
         ),
       ),
@@ -688,6 +719,33 @@ class _MemberPageState extends State<MemberPage> {
           ],
         );
       },
+    );
+  }
+
+  void _showQRCode(Member member) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('QR Code Member'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(member.name),
+            SizedBox(height: 16),
+            QrImageView(
+              data: member.qrCode!,
+              version: QrVersions.auto,
+              size: 200.0,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Tutup'),
+          ),
+        ],
+      ),
     );
   }
 
