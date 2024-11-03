@@ -214,6 +214,24 @@ class DBHelper {
     );
   }
 
+  Future<List<Map<String, dynamic>>> getMembersNearingExpiry() async {
+  final db = await database;
+  final now = DateTime.now();
+  
+  // Mengambil member yang akan berakhir dalam 7 hari ke depan
+  final sevenDaysLater = now.add(const Duration(days: 7));
+  
+  final dateNow = DateTime(now.year, now.month, now.day).toIso8601String();
+  final dateSevenDays = DateTime(sevenDaysLater.year, sevenDaysLater.month, sevenDaysLater.day).toIso8601String();
+
+  return await db.query(
+    'members',
+    where: 'end_date BETWEEN ? AND ? AND is_active = ?',
+    whereArgs: [dateNow, dateSevenDays, 'Aktif'],
+    orderBy: 'end_date ASC', // Urutkan berdasarkan yang paling dekat expired
+  );
+}
+
   // ===========================================
 
   // CRUD tabel price
