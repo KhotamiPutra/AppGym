@@ -1,9 +1,13 @@
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:appgym/Database/database_helper.dart';
 import 'package:appgym/ImageCompressionHelper.dart';
 import 'package:appgym/QRScanner.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -249,133 +253,115 @@ class _MemberPageState extends State<MemberPage> {
                       itemBuilder: (context, index) {
                         final member = _filteredMembers[index];
                         return Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: const BorderSide(
-                              color: Colors.black,
-                              width: 0.5,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: const BorderSide(
+                                color: Colors.black,
+                                width: 0.5,
+                              ),
                             ),
-                          ),
-                          color:
-                              isExpired(member) ? Colors.white : Colors.white,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              children: [
-                                Row(
+                            color:
+                                isExpired(member) ? Colors.white : Colors.white,
+                            child: InkWell(
+                              onTap: () => _showMemberDetail(member),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
                                   children: [
-                                    CircleAvatar(
-                                      radius: 24,
-                                      backgroundImage: member.photo != null
-                                          ? MemoryImage(member.photo!)
-                                          : null,
-                                      child: member.photo == null
-                                          ? const Icon(Icons.person)
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            member.name,
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: member.isActive == 'Aktif'
-                                                  ? Colors.green.shade100
-                                                  : Colors.red.shade100,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color:
-                                                    member.isActive == 'Aktif'
+                                    Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 24,
+                                          backgroundImage: member.photo != null
+                                              ? MemoryImage(member.photo!)
+                                              : null,
+                                          child: member.photo == null
+                                              ? const Icon(Icons.person)
+                                              : null,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                member.name,
+                                                style: const TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 4,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: member.isActive ==
+                                                          'Aktif'
+                                                      ? Colors.green.shade100
+                                                      : Colors.red.shade100,
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  border: Border.all(
+                                                    color: member.isActive ==
+                                                            'Aktif'
                                                         ? Colors.green
                                                         : Colors.red,
-                                              ),
-                                            ),
-                                            child: Text(
-                                              member.isActive,
-                                              style: TextStyle(
-                                                color:
-                                                    member.isActive == 'Aktif'
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  member.isActive,
+                                                  style: TextStyle(
+                                                    color: member.isActive ==
+                                                            'Aktif'
                                                         ? Colors.green.shade800
                                                         : Colors.red.shade800,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                    PopupMenuButton<String>(
-                                      onSelected: (value) {
-                                        switch (value) {
-                                          case 'QR':
-                                            _showQRCode(member);
-                                            break;
-                                          case 'Edit':
-                                            _showEditMemberModal(member);
-                                            break;
-                                          case 'Delete':
-                                            _confirmDeleteMember(member.id);
-                                            break;
-                                        }
-                                      },
-                                      itemBuilder: (context) => [
-                                        const PopupMenuItem(
-                                            value: 'QR',
-                                            child: Text('Show QR')),
-                                        const PopupMenuItem(
-                                            value: 'Edit', child: Text('Edit')),
-                                        const PopupMenuItem(
-                                            value: 'Delete',
-                                            child: Text('Delete')),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const Divider(color: Colors.black),
-                                const SizedBox(height: 10),
-                                Column(
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "Tanggal: ${member.startDate} s/d ${member.endDate}",
-                                          style: const TextStyle(fontSize: 12),
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 5),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                    const Divider(color: Colors.black),
+                                    const SizedBox(height: 10),
+                                    Column(
                                       children: [
-                                        Text(
-                                          "TNI: ${member.isTNI ? 'Ya' : 'Tidak'}",
-                                          style: const TextStyle(fontSize: 12),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              "Tanggal: ${member.startDate} s/d ${member.endDate}",
+                                              style:
+                                                  const TextStyle(fontSize: 12),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              "TNI: ${member.isTNI ? 'Ya' : 'Tidak'}",
+                                              style:
+                                                  const TextStyle(fontSize: 12),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
-                          ),
-                        );
+                              ),
+                            ));
                       },
                     ),
                   ),
@@ -496,8 +482,20 @@ class _MemberPageState extends State<MemberPage> {
               ),
               TextField(
                 controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Nomor Telepon'),
+                decoration: const InputDecoration(
+                  labelText: 'Nomor Telepon',
+                  prefixText: '+62 ',
+                  hintText: 'Contoh: 8123456789',
+                ),
                 keyboardType: TextInputType.phone,
+                onChanged: (value) {
+                  if (value.startsWith('0')) {
+                    _phoneController.text = value.substring(1);
+                    _phoneController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _phoneController.text.length),
+                    );
+                  }
+                },
               ),
               Row(
                 children: [
@@ -626,9 +624,19 @@ class _MemberPageState extends State<MemberPage> {
     }
   }
 
+//fungsi untuk memformat no tel menjadi 62
+  String _formatPhoneNumber(String phone) {
+    if (phone.startsWith('0')) {
+      return '62${phone.substring(1)}';
+    } else if (!phone.startsWith('62')) {
+      return '62$phone';
+    }
+    return phone;
+  }
+
   Future<void> _saveMember() async {
     final name = _nameController.text;
-    final phoneNumber = _phoneController.text;
+    var phoneNumber = _phoneController.text;
     final startDate = _startDateController.text;
     final endDate = _endDateController.text;
     final isActive = _checkActiveStatus(endDate);
@@ -645,11 +653,12 @@ class _MemberPageState extends State<MemberPage> {
       );
       return;
     }
-    if (!RegExp(r'^\d{10,}$').hasMatch(phoneNumber)) {
+    phoneNumber = _formatPhoneNumber(phoneNumber);
+    if (!RegExp(r'^62\d{9,}$').hasMatch(phoneNumber)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content:
-                Text('Nomor telepon harus berupa angka dan minimal 10 digit')),
+            content: Text(
+                'Nomor telepon harus diawali 62 dan minimal 11 digit (termasuk 62)')),
       );
       return;
     }
@@ -731,26 +740,114 @@ class _MemberPageState extends State<MemberPage> {
   }
 
   void _showQRCode(Member member) {
+    final qrKey = GlobalKey();
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('QR Code Member'),
+        title: const Text('QR Code Member'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(member.name),
-            SizedBox(height: 16),
-            QrImageView(
-              data: member.qrCode!,
-              version: QrVersions.auto,
-              size: 200.0,
+            // Bungkus semua konten yang ingin disimpan dalam satu RepaintBoundary
+            RepaintBoundary(
+              key: qrKey,
+              child: Container(
+                color: Colors.white, // Pastikan background putih
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Info member dengan style yang lebih menarik
+                    Text(
+                      member.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      member.phoneNumber,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    // QR Code
+                    QrImageView(
+                      data: member.qrCode!,
+                      version: QrVersions.auto,
+                      size: 200.0,
+                      backgroundColor: Colors.white,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
+            onPressed: () async {
+              try {
+                // Dapatkan render object menggunakan key
+                final boundary = qrKey.currentContext?.findRenderObject()
+                    as RenderRepaintBoundary?;
+                if (boundary == null) {
+                  throw Exception('Failed to find QR code boundary');
+                }
+
+                // Render ke image dengan pixel ratio yang lebih tinggi
+                final image = await boundary.toImage(pixelRatio: 3.0);
+                final byteData =
+                    await image.toByteData(format: ImageByteFormat.png);
+
+                if (byteData == null) {
+                  throw Exception('Failed to generate image data');
+                }
+
+                final buffer = byteData.buffer.asUint8List();
+
+                // Simpan dengan nama yang lebih deskriptif
+                final timestamp = DateTime.now().millisecondsSinceEpoch;
+                final result = await ImageGallerySaver.saveImage(
+                  buffer,
+                  name: 'Member_${member.name.replaceAll(' ', '_')}_$timestamp',
+                  quality: 100,
+                );
+
+                if (result['isSuccess']) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('QR Code berhasil disimpan ke galeri'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } else {
+                  throw Exception('Failed to save image');
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Gagal menyimpan QR Code: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Simpan QR'),
+          ),
+          TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Tutup'),
+            child: const Text('Tutup'),
           ),
         ],
       ),
@@ -791,6 +888,250 @@ class _MemberPageState extends State<MemberPage> {
           ),
         );
       },
+    );
+  }
+
+// Tambahkan fungsi ini di dalam class _MemberPageState
+
+  void _showMemberDetail(Member member) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        String trainerName = '';
+        if (member.trainerId != null) {
+          final trainer = _trainers.firstWhere(
+            (trainer) => trainer['id'] == member.trainerId,
+            orElse: () => {'name': 'Tidak ada'},
+          );
+          trainerName = trainer['name'];
+        }
+
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Container(
+              padding: const EdgeInsets.all(16),
+              child: ListView(
+                controller: scrollController,
+                children: [
+                  // Handle Bar
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+
+                  // Profile Section
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 40,
+                        backgroundImage: member.photo != null
+                            ? MemoryImage(member.photo!)
+                            : null,
+                        child: member.photo == null
+                            ? const Icon(Icons.person, size: 40)
+                            : null,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              member.name,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: member.isActive == 'Aktif'
+                                    ? Colors.green.shade100
+                                    : Colors.red.shade100,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: member.isActive == 'Aktif'
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              ),
+                              child: Text(
+                                member.isActive,
+                                style: TextStyle(
+                                  color: member.isActive == 'Aktif'
+                                      ? Colors.green.shade800
+                                      : Colors.red.shade800,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Member Details - Perhatikan perubahan pada nomor telepon
+                  _buildDetailItem(
+                    icon: Icons.phone,
+                    title: 'Nomor Telepon',
+                    value: member.phoneNumber,
+                    isCopyable: true, // Menambahkan parameter isCopyable
+                  ),
+                  _buildDetailItem(
+                    icon: Icons.calendar_today,
+                    title: 'Tanggal Mulai',
+                    value: member.startDate,
+                  ),
+                  _buildDetailItem(
+                    icon: Icons.event,
+                    title: 'Tanggal Berakhir',
+                    value: member.endDate,
+                  ),
+                  _buildDetailItem(
+                    icon: Icons.person,
+                    title: 'Trainer',
+                    value: trainerName.isEmpty ? 'Tidak ada' : trainerName,
+                  ),
+                  _buildDetailItem(
+                    icon: Icons.military_tech,
+                    title: 'Status TNI',
+                    value: member.isTNI ? 'Ya' : 'Tidak',
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Action Buttons
+                  Wrap(
+                    spacing: 8.0,
+                    runSpacing: 8.0,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _showEditMemberModal(member);
+                        },
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Edit'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _showQRCode(member);
+                        },
+                        icon: const Icon(Icons.qr_code),
+                        label: const Text('QR Code'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _confirmDeleteMember(member.id);
+                        },
+                        icon: const Icon(Icons.delete),
+                        label: const Text('Hapus'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Helper widget untuk menampilkan detail item
+  Widget _buildDetailItem({
+    required IconData icon,
+    required String title,
+    required String value,
+    bool isCopyable = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: Colors.blue),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isCopyable)
+            IconButton(
+              icon: const Icon(Icons.copy, color: Colors.blue),
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: value));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Nomor telepon berhasil disalin'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+            ),
+        ],
+      ),
     );
   }
 
