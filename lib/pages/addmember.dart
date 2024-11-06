@@ -749,16 +749,38 @@ class _MemberPageState extends State<MemberPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Bungkus semua konten yang ingin disimpan dalam satu RepaintBoundary
             RepaintBoundary(
               key: qrKey,
               child: Container(
-                color: Colors.white, // Pastikan background putih
+                color: Colors.white,
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Info member dengan style yang lebih menarik
+                    // Profile Photo
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.blue,
+                          width: 2,
+                        ),
+                        image: member.photo != null
+                            ? DecorationImage(
+                                image: MemoryImage(member.photo!),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child: member.photo == null
+                          ? const Icon(Icons.person,
+                              size: 40, color: Colors.grey)
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    // Member Info
                     Text(
                       member.name,
                       style: const TextStyle(
@@ -778,11 +800,18 @@ class _MemberPageState extends State<MemberPage> {
                     ),
                     const SizedBox(height: 16),
                     // QR Code
-                    QrImageView(
-                      data: member.qrCode!,
-                      version: QrVersions.auto,
-                      size: 200.0,
-                      backgroundColor: Colors.white,
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: QrImageView(
+                        data: member.qrCode!,
+                        version: QrVersions.auto,
+                        size: 200.0,
+                        backgroundColor: Colors.white,
+                      ),
                     ),
                   ],
                 ),
@@ -794,14 +823,13 @@ class _MemberPageState extends State<MemberPage> {
           TextButton(
             onPressed: () async {
               try {
-                // Dapatkan render object menggunakan key
                 final boundary = qrKey.currentContext?.findRenderObject()
                     as RenderRepaintBoundary?;
                 if (boundary == null) {
                   throw Exception('Failed to find QR code boundary');
                 }
 
-                // Render ke image dengan pixel ratio yang lebih tinggi
+                // Increase pixel ratio for better quality
                 final image = await boundary.toImage(pixelRatio: 3.0);
                 final byteData =
                     await image.toByteData(format: ImageByteFormat.png);
@@ -812,7 +840,7 @@ class _MemberPageState extends State<MemberPage> {
 
                 final buffer = byteData.buffer.asUint8List();
 
-                // Simpan dengan nama yang lebih deskriptif
+                // Save with descriptive name including timestamp
                 final timestamp = DateTime.now().millisecondsSinceEpoch;
                 final result = await ImageGallerySaver.saveImage(
                   buffer,
@@ -891,8 +919,7 @@ class _MemberPageState extends State<MemberPage> {
     );
   }
 
-// Tambahkan fungsi ini di dalam class _MemberPageState
-
+  // Helper function to show member detail
   void _showMemberDetail(Member member) {
     showModalBottomSheet(
       context: context,
@@ -991,8 +1018,6 @@ class _MemberPageState extends State<MemberPage> {
                     ],
                   ),
                   const SizedBox(height: 24),
-
-                  // Member Details - Perhatikan perubahan pada nomor telepon
                   _buildDetailItem(
                     icon: Icons.phone,
                     title: 'Nomor Telepon',

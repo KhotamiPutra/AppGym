@@ -1,6 +1,7 @@
 import 'package:appgym/Database/database_helper.dart';
 import 'package:appgym/ImageCompressionHelper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 
@@ -99,9 +100,18 @@ class _TrainerPageState extends State<TrainerPage> {
     await _loadTrainers();
   }
 
+  String _formatPhoneNumber(String phone) {
+    if (phone.startsWith('0')) {
+      return '62${phone.substring(1)}';
+    } else if (!phone.startsWith('62')) {
+      return '62$phone';
+    }
+    return phone;
+  }
+
   Future<void> _saveTrainer() async {
     final name = _nameController.text;
-    final phoneNumber = _phoneNumberController.text;
+    var phoneNumber = _phoneNumberController.text;
     final price = double.tryParse(_priceController.text);
 
     if (name.isEmpty || phoneNumber.isEmpty || price == null) {
@@ -110,11 +120,12 @@ class _TrainerPageState extends State<TrainerPage> {
       );
       return;
     }
-    if (!RegExp(r'^\d{10,}$').hasMatch(phoneNumber)) {
+    phoneNumber = _formatPhoneNumber(phoneNumber);
+    if (!RegExp(r'^62\d{9,}$').hasMatch(phoneNumber)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content:
-                Text('Nomor telepon harus berupa angka dan minimal 10 digit')),
+            content: Text(
+                'Nomor telepon harus diawali 62 dan minimal 11 digit (termasuk 62)')),
       );
       return;
     }
@@ -208,77 +219,60 @@ class _TrainerPageState extends State<TrainerPage> {
                     itemBuilder: (context, index) {
                       final trainer = _filteredTrainers[index];
                       return Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side:
-                              const BorderSide(color: Colors.black, width: 0.5),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 24,
-                                      backgroundImage: trainer.photo != null
-                                          ? MemoryImage(trainer.photo!)
-                                          : null,
-                                      child: trainer.photo == null
-                                          ? const Icon(Icons.person)
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        trainer.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(
+                                color: Colors.black, width: 0.5),
+                          ),
+                          child: InkWell(
+                            onTap: () => _showTrainerDetail(trainer),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 24,
+                                          backgroundImage: trainer.photo != null
+                                              ? MemoryImage(trainer.photo!)
+                                              : null,
+                                          child: trainer.photo == null
+                                              ? const Icon(Icons.person)
+                                              : null,
                                         ),
-                                      ),
-                                    ),
-                                    PopupMenuButton<String>(
-                                      onSelected: (value) {
-                                        switch (value) {
-                                          case 'Edit':
-                                            _showEditTrainerModal(trainer);
-                                            break;
-                                          case 'Delete':
-                                            _confirmDeleteTrainer(trainer.id);
-                                            break;
-                                        }
-                                      },
-                                      itemBuilder: (context) => [
-                                        const PopupMenuItem(
-                                            value: 'Edit', child: Text('Edit')),
-                                        const PopupMenuItem(
-                                            value: 'Delete',
-                                            child: Text('Delete')),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            trainer.name,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
                                       ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                              const Divider(color: Colors.black),
-                              const SizedBox(height: 10),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(trainer.phoneNumber),
-                                  Text(
-                                    'Rp${trainer.price.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  const Divider(color: Colors.black),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(trainer.phoneNumber),
+                                      Text(
+                                        'Rp${trainer.price.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
-                        ),
-                      );
+                            ),
+                          ));
                     },
                   ),
                 )),
@@ -362,8 +356,21 @@ class _TrainerPageState extends State<TrainerPage> {
               ),
               TextField(
                 controller: _phoneNumberController,
-                decoration: const InputDecoration(labelText: 'Nomor Telepon'),
+                decoration: const InputDecoration(
+                  labelText: 'Nomor Telepon',
+                  prefixText: '+62 ',
+                  hintText: 'Contoh: 8123456789',
+                ),
                 keyboardType: TextInputType.phone,
+                onChanged: (value) {
+                  if (value.startsWith('0')) {
+                    _phoneNumberController.text = value.substring(1);
+                    _phoneNumberController.selection =
+                        TextSelection.fromPosition(
+                      TextPosition(offset: _phoneNumberController.text.length),
+                    );
+                  }
+                },
               ),
               TextField(
                 controller: _priceController,
@@ -464,6 +471,181 @@ class _TrainerPageState extends State<TrainerPage> {
           ),
         );
       },
+    );
+  }
+
+// Helper function to show trainer detail
+  void _showTrainerDetail(Trainer trainer) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Container(
+              padding: const EdgeInsets.all(16),
+              child: ListView(
+                controller: scrollController,
+                children: [
+                  // Handle Bar
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+
+                  // Profile Section
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 40,
+                        backgroundImage: trainer.photo != null
+                            ? MemoryImage(trainer.photo!)
+                            : null,
+                        child: trainer.photo == null
+                            ? const Icon(Icons.person, size: 40)
+                            : null,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              trainer.name,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Trainer Details
+                  _buildDetailItem(
+                    icon: Icons.phone,
+                    title: 'Nomor Telepon',
+                    value: trainer.phoneNumber,
+                    isCopyable: true,
+                  ),
+                  _buildDetailItem(
+                      icon: Icons.price_change,
+                      title: 'Harga Trainer',
+                      value: 'Rp ${trainer.price.toString()}'),
+                  Wrap(
+                    spacing: 8.0,
+                    runSpacing: 8.0,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _showEditTrainerModal(trainer);
+                        },
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Edit'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _confirmDeleteTrainer(trainer.id);
+                        },
+                        icon: const Icon(Icons.delete),
+                        label: const Text('Hapus'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailItem({
+    required IconData icon,
+    required String title,
+    required String value,
+    bool isCopyable = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: Colors.blue),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isCopyable)
+            IconButton(
+              icon: const Icon(Icons.copy, color: Colors.blue),
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: value));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Nomor telepon berhasil disalin'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+            ),
+        ],
+      ),
     );
   }
 
